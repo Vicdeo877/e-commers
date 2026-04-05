@@ -1,0 +1,442 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  customer
+  admin
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  email        String    @unique
+  /// Null when the user only signs in with Google (password login disabled until they set a password).
+  passwordHash String?
+  /// Google OAuth subject (`sub`); set when the account is linked to Google.
+  googleId     String?   @unique
+  fullName     String
+  phone        String?
+  address      String?
+  role         Role      @default(customer)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  cart         Cart?
+  orders       Order[]
+  addresses    Address[]
+  reviews      Review[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id                       Int                      @id @default(autoincrement())
+  name                     String
+  slug                     String                   @unique
+  description              String?
+  image                    String?
+  products                 Product[]
+  importDefaultForCatalog SettingsProductCatalog[] @relation("ImportDefaultCategory")
+}
+
+model Product {
+  id               Int        @id @default(autoincrement())
+  name             String
+  slug             String     @unique
+  sku              String?
+  description      String?
+  shortDescription String?
+  price            Float
+  comparePrice     Float?
+  unit             String     @default("kg")
+  stockQuantity    Int        @default(0)
+  imageMain        String?
+  categoryId       Int?
+  category         Category?  @relation(fields: [categoryId], references: [id])
+  isActive         Boolean    @default(true)
+  isFeatured       Boolean    @default(false)
+  cartLines        CartLine[]
+  orderItems       OrderItem[]
+  reviews          Review[]
+  createdAt        DateTime   @default(now())
+}
+
+model Cart {
+  id         String     @id @default(cuid())
+  userId     Int?       @unique
+  user       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestToken String?    @unique
+  lines      CartLine[]
+  updatedAt  DateTime   @updatedAt
+}
+
+model CartLine {
+  id        Int     @id @default(autoincrement())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int
+
+  @@unique([cartId, productId])
+}
+
+model Order {
+  id                Int         @id @default(autoincrement())
+  orderNumber       String      @unique
+  userId            Int?
+  user              User?       @relation(fields: [userId], references: [id])
+  guestEmail        String?
+  shippingName      String
+  shippingPhone     String
+  shippingAddress   String
+  shippingCity      String
+  shippingState     String
+  shippingPincode   String
+  notes             String?
+  subtotal          Float
+  shippingAmount    Float
+  discountAmount    Float       @default(0)
+  total             Float
+  couponCode        String?
+  orderStatus       String      @default("pending")
+  paymentStatus     String      @default("pending")
+  paymentMethod     String
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  trackingNumber    String?
+  items             OrderItem[]
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  price     Float
+  quantity  Int
+}
+
+model Coupon {
+  id            Int       @id @default(autoincrement())
+  code          String    @unique
+  description   String?
+  discountType  String
+  discountValue Float
+  minOrder      Float?
+  maxDiscount   Float?
+  isActive      Boolean   @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+  /// Who may use this coupon: all | guest_only | signed_in | new_user | mid_user | old_user | account_under_days | account_over_days
+  audienceSegment           String  @default("all") @map("audience_segment")
+  /// For mid_user: min lifetime orders (inclusive). Default 1 in code.
+  segmentMinOrders          Int?    @map("segment_min_orders")
+  /// For mid_user: max lifetime orders (inclusive). Default 3 in code.
+  segmentMaxOrders          Int?    @map("segment_max_orders")
+  /// For old_user: min lifetime orders. Default 4 in code.
+  segmentLoyalMinOrders     Int?    @map("segment_loyal_min_orders")
+  /// For account_under_days: max days since signup. Default 30 in code.
+  segmentMaxAccountAgeDays  Int?    @map("segment_max_account_age_days")
+  /// For account_over_days: min days since signup. Default 90 in code.
+  segmentMinAccountAgeDays  Int?    @map("segment_min_account_age_days")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  guestName String?
+  rating    Int
+  title     String?
+  comment   String?
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Banner {
+  id        Int     @id @default(autoincrement())
+  placement String  @default("hero")
+  title     String
+  subtitle  String
+  linkUrl   String?
+  imagePath String?
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+}
+
+model Offer {
+  id            Int     @id @default(autoincrement())
+  title         String
+  description   String
+  couponCode    String?
+  discountValue Float
+  isActive      Boolean @default(true)
+  /// Lower sorts first on the homepage “Offers & deals” strip.
+  sortOrder     Int     @default(0) @map("sort_order")
+  /// When true, card gets stronger styling + “Featured” on the main page.
+  highlight     Boolean @default(false)
+}
+
+model BlogPost {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String    @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  publishedAt DateTime?
+  isPublished Boolean   @default(true)
+}
+
+model Address {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String?
+  fullName  String
+  phone     String
+  line1     String
+  city      String
+  state     String
+  pincode   String
+  isDefault Boolean @default(false)
+}
+
+/** Singleton row id=1 — site branding & contact */
+model SettingsGeneral {
+  id        Int      @id @default(1)
+  siteName  String   @default("BlissFruitz") @map("site_name")
+  logo      String?
+  favicon   String?
+  email     String?
+  phone     String?
+  address   String?
+  timezone  String   @default("Asia/Kolkata")
+  language  String   @default("en")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_general")
+}
+
+model SettingsPayment {
+  id                 Int      @id @default(1)
+  currency           String   @default("INR")
+  codEnabled         Boolean  @default(true) @map("cod_enabled")
+  razorpayEnabled    Boolean  @default(true) @map("razorpay_enabled")
+  stripeEnabled      Boolean  @default(false) @map("stripe_enabled")
+  paypalEnabled      Boolean  @default(false) @map("paypal_enabled")
+  autoRefundEnabled  Boolean  @default(false) @map("auto_refund_enabled")
+  razorpayWebhookUrl String?  @map("razorpay_webhook_url")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_payment")
+}
+
+model SettingsShipping {
+  id               Int      @id @default(1)
+  flatRate         Float    @default(50) @map("flat_rate")
+  freeShippingMin  Float    @default(500) @map("free_shipping_min")
+  deliveryEtaNote  String?  @map("delivery_eta_note")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_shipping")
+}
+
+/** Singleton row id=1 — catalogue/import defaults (import flows may read these later) */
+model SettingsProductCatalog {
+  id                      Int       @id @default(1)
+  defaultImportCategoryId Int?     @map("default_import_category_id")
+  defaultImportCategory   Category? @relation("ImportDefaultCategory", fields: [defaultImportCategoryId], references: [id], onDelete: SetNull)
+  skuAutoGenerate         Boolean   @default(false) @map("sku_auto_generate")
+  skuPrefix               String    @default("BF-") @map("sku_prefix")
+  inventoryAlertsEnabled  Boolean   @default(false) @map("inventory_alerts_enabled")
+  inventoryLowThreshold   Int       @default(10) @map("inventory_low_threshold")
+  csvBulkUploadEnabled    Boolean   @default(false) @map("csv_bulk_upload_enabled")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
+
+  @@map("settings_product_catalog")
+}
+
+/** Singleton id=1 — backup / cache preferences (automation reads these later; export/restore are separate actions) */
+model SettingsBackup {
+  id                      Int      @id @default(1)
+  scheduledLocalEnabled   Boolean  @default(false) @map("scheduled_local_enabled")
+  scheduledLocalFrequency String   @default("none") @map("scheduled_local_frequency")
+  localRetentionDays      Int      @default(7) @map("local_retention_days")
+  cloudBackupEnabled      Boolean  @default(false) @map("cloud_backup_enabled")
+  cloudProvider           String   @default("none") @map("cloud_provider")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_backup")
+}
+
+/** Singleton id=1 — storefront maintenance banner */
+model SettingsMaintenance {
+  id        Int      @id @default(1)
+  enabled   Boolean  @default(false)
+  message   String   @default("We're making improvements. Please check back soon.")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_maintenance")
+}
+
+/** Singleton id=1 — API / webhooks / carrier integration prefs (secrets belong in env when features ship) */
+model SettingsApiIntegrations {
+  id                   Int      @id @default(1)
+  restApiEnabled       Boolean  @default(false) @map("rest_api_enabled")
+  webhookErpUrl        String?  @map("webhook_erp_url")
+  webhookCrmUrl        String?  @map("webhook_crm_url")
+  shiprocketEnabled    Boolean  @default(false) @map("shiprocket_enabled")
+  shiprocketWebhookUrl String?  @map("shiprocket_webhook_url")
+  delhiveryEnabled     Boolean  @default(false) @map("delhivery_enabled")
+  delhiveryWebhookUrl  String? @map("delhivery_webhook_url")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_api_integrations")
+}
+
+/** Singleton id=1 — coupon behaviour prefs (checkout still uses Admin → Coupons for real codes today) */
+model SettingsCouponDefaults {
+  id                       Int      @id @default(1)
+  autoApplyEnabled         Boolean  @default(false) @map("auto_apply_enabled")
+  /// Storefront behaviour: code_only | auto | select
+  couponApplyMode          String   @default("code_only") @map("coupon_apply_mode")
+  autoApplyMinOrder        Float?   @map("auto_apply_min_order")
+  userSpecificCodesEnabled Boolean  @default(false) @map("user_specific_codes_enabled")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_coupon_defaults")
+}
+
+/** Singleton id=1 — invoice / tax / PDF prefs (PDF generation not wired yet) */
+model SettingsInvoiceTax {
+  id                     Int      @id @default(1)
+  taxScheme              String   @default("gst") @map("tax_scheme")
+  taxLabel               String   @default("GST") @map("tax_label")
+  defaultTaxRatePercent  Float    @default(0) @map("default_tax_rate_percent")
+  pricesTaxInclusive     Boolean  @default(false) @map("prices_tax_inclusive")
+  invoicePrefix          String   @default("INV-") @map("invoice_prefix")
+  invoiceNumberPadding   Int      @default(4) @map("invoice_number_padding")
+  pdfCompanyName         String?  @map("pdf_company_name")
+  pdfLogoUrl             String?  @map("pdf_logo_url")
+  perProductTaxEnabled   Boolean  @default(false) @map("per_product_tax_enabled")
+  invoiceTemplate        String   @default("classic") @map("invoice_template")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_invoice_tax")
+}
+
+/** Singleton id=1 — storefront theme (applied via ThemeRoot + /api/content/site-settings) */
+model SettingsUiTheme {
+  id           Int      @id @default(1)
+  themeMode    String   @default("light") @map("theme_mode")
+  primaryColor String   @default("#16a34a") @map("primary_color")
+  layoutPreset String   @default("default") @map("layout_preset")
+  customCss    String?  @map("custom_css")
+  customJs     String?  @map("custom_js")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_ui_theme")
+}
+
+/** Singleton id=1 — SMTP, SMS, push, templates (sending not wired until mailer ships) */
+model SettingsEmailNotifications {
+  id     Int @id @default(1)
+  smtpEnabled  Boolean @default(false) @map("smtp_enabled")
+  smtpHost     String? @map("smtp_host")
+  smtpPort     Int     @default(587) @map("smtp_port")
+  smtpTls      Boolean @default(true) @map("smtp_tls")
+  smtpUser     String? @map("smtp_user")
+  smtpPassword String? @map("smtp_password")
+  smtpFromEmail String? @map("smtp_from_email")
+  smtpFromName  String? @map("smtp_from_name")
+
+  smsProvider       String  @default("none") @map("sms_provider")
+  twilioAccountSid  String? @map("twilio_account_sid")
+  twilioAuthToken   String? @map("twilio_auth_token")
+  twilioFromNumber  String? @map("twilio_from_number")
+  fast2smsApiKey    String? @map("fast2sms_api_key")
+  fast2smsSenderId  String? @map("fast2sms_sender_id")
+
+  pushEnabled   Boolean @default(false) @map("push_enabled")
+  pushProvider  String  @default("none") @map("push_provider")
+  fcmServerKey  String? @map("fcm_server_key")
+
+  orderConfirmSubject String? @map("order_confirm_subject")
+  orderConfirmBody    String? @map("order_confirm_body")
+  invoiceEmailSubject String? @map("invoice_email_subject")
+  invoiceEmailBody    String? @map("invoice_email_body")
+
+  notifyOrderPlaced     Boolean @default(true) @map("notify_order_placed")
+  notifyPaymentReceived Boolean @default(true) @map("notify_payment_received")
+  notifyShipped         Boolean @default(true) @map("notify_shipped")
+  eventQueueEnabled     Boolean @default(false) @map("event_queue_enabled")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_email_notifications")
+}
+
+/** Singleton id=1 — security prefs (enforcement in auth layer when implemented) */
+model SettingsSecurity {
+  id Int @id @default(1)
+
+  adminTwoFactorEnabled Boolean @default(false) @map("admin_two_factor_enabled")
+
+  ipAllowlistEnabled Boolean @default(false) @map("ip_allowlist_enabled")
+  ipAllowlistText    String? @map("ip_allowlist_text")
+
+  loginMaxAttempts    Int @default(10) @map("login_max_attempts")
+  loginLockoutMinutes Int @default(15) @map("login_lockout_minutes")
+
+  passwordMinLength     Int     @default(8) @map("password_min_length")
+  passwordRequireUpper  Boolean @default(false) @map("password_require_upper")
+  passwordRequireLower  Boolean @default(false) @map("password_require_lower")
+  passwordRequireNumber Boolean @default(false) @map("password_require_number")
+  passwordRequireSymbol Boolean @default(false) @map("password_require_symbol")
+
+  sessionTimeoutMinutes Int @default(10080) @map("session_timeout_minutes")
+
+  auditLogEnabled       Boolean @default(false) @map("audit_log_enabled")
+  auditLogRetentionDays Int     @default(90) @map("audit_log_retention_days")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_security")
+}
+
+/** Singleton id=1 — GA / Meta Pixel / conversion toggles (scripts via ThemeRoot + site-settings) */
+model SettingsAnalytics {
+  id Int @id @default(1)
+
+  googleAnalyticsId String? @map("google_analytics_id")
+  facebookPixelId   String? @map("facebook_pixel_id")
+
+  conversionTrackPurchase      Boolean @default(true) @map("conversion_track_purchase")
+  conversionTrackAddToCart     Boolean @default(true) @map("conversion_track_add_to_cart")
+  conversionTrackBeginCheckout Boolean @default(true) @map("conversion_track_begin_checkout")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings_analytics")
+}

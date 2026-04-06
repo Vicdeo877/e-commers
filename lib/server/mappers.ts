@@ -158,6 +158,7 @@ export function mapOrderAdmin(o: Order & { items?: OrderItem[] }) {
     coupon_code: o.couponCode ?? undefined,
     razorpay_payment_id: o.razorpayPaymentId ?? undefined,
     tracking_number: o.trackingNumber ?? undefined,
+    location_link: (o as any).locationLink ?? undefined,
     created_at: o.createdAt.toISOString(),
     updated_at: o.updatedAt.toISOString(),
     items: o.items?.map((i) => ({

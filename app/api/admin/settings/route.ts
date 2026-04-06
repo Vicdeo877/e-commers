@@ -57,6 +57,9 @@ export async function GET() {
         paypal_enabled: p?.paypalEnabled ?? false,
         auto_refund_enabled: p?.autoRefundEnabled ?? false,
         razorpay_webhook_url: p?.razorpayWebhookUrl ?? "",
+        razorpay_key_id: p?.razorpayKeyId ?? "",
+        razorpay_key_secret: "",
+        razorpay_key_secret_set: Boolean(p?.razorpayKeySecret && p.razorpayKeySecret.length > 0),
       },
       shipping: {
         flat_rate: s?.flatRate ?? 50,
@@ -156,6 +159,10 @@ export async function GET() {
       },
       security: {
         admin_two_factor_enabled: sec?.adminTwoFactorEnabled ?? false,
+        google_sign_in_enabled: sec?.googleSignInEnabled ?? false,
+        google_client_id: sec?.googleClientId ?? "",
+        google_client_secret: "",
+        google_client_secret_set: Boolean(sec?.googleClientSecret && sec.googleClientSecret.length > 0),
         ip_allowlist_enabled: sec?.ipAllowlistEnabled ?? false,
         ip_allowlist_text: sec?.ipAllowlistText ?? "",
         login_max_attempts: sec?.loginMaxAttempts ?? 10,
@@ -232,6 +239,8 @@ export async function PUT(req: Request) {
           razorpayWebhookUrl: p.razorpay_webhook_url
             ? String(p.razorpay_webhook_url).slice(0, 2000)
             : null,
+          razorpayKeyId: p.razorpay_key_id ? String(p.razorpay_key_id).slice(0, 255) : null,
+          razorpayKeySecret: p.razorpay_key_secret ? String(p.razorpay_key_secret).slice(0, 500) : null,
         },
         update: {
           currency: String(p.currency ?? "INR").slice(0, 10).toUpperCase(),
@@ -243,6 +252,9 @@ export async function PUT(req: Request) {
           razorpayWebhookUrl: p.razorpay_webhook_url
             ? String(p.razorpay_webhook_url).slice(0, 2000)
             : null,
+          razorpayKeyId: p.razorpay_key_id ? String(p.razorpay_key_id).slice(0, 255) : null,
+          ...(p.razorpay_key_secret ? { razorpayKeySecret: String(p.razorpay_key_secret).slice(0, 500) } : {}),
+          ...(p.clear_razorpay_key_secret ? { razorpayKeySecret: null } : {}),
         },
       });
     }
@@ -588,6 +600,9 @@ export async function PUT(req: Request) {
         create: {
           id: 1,
           adminTwoFactorEnabled: Boolean(u.admin_two_factor_enabled),
+          googleSignInEnabled: Boolean(u.google_sign_in_enabled),
+          googleClientId: u.google_client_id ? String(u.google_client_id).slice(0, 255) : null,
+          googleClientSecret: u.google_client_secret ? String(u.google_client_secret).slice(0, 500) : null,
           ipAllowlistEnabled: Boolean(u.ip_allowlist_enabled),
           ipAllowlistText: ipText.length > 0 ? ipText : null,
           loginMaxAttempts,
@@ -603,6 +618,10 @@ export async function PUT(req: Request) {
         },
         update: {
           adminTwoFactorEnabled: Boolean(u.admin_two_factor_enabled),
+          googleSignInEnabled: Boolean(u.google_sign_in_enabled),
+          googleClientId: u.google_client_id ? String(u.google_client_id).slice(0, 255) : null,
+          ...(u.google_client_secret ? { googleClientSecret: String(u.google_client_secret).slice(0, 500) } : {}),
+          ...(u.clear_google_client_secret ? { googleClientSecret: null } : {}),
           ipAllowlistEnabled: Boolean(u.ip_allowlist_enabled),
           ipAllowlistText: ipText.length > 0 ? ipText : null,
           loginMaxAttempts,

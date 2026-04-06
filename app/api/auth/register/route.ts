@@ -8,7 +8,7 @@ import {
   mergeGuestCart,
   userPublic,
 } from "@/lib/server/auth";
-import { verifyEmailAddress } from "@/lib/server/email-verification";
+import { verifyEmailAddress, verifyPhoneNumber } from "@/lib/server/email-verification";
 
 export async function POST(req: Request) {
   try {
@@ -27,6 +27,11 @@ export async function POST(req: Request) {
 
     const verified = await verifyEmailAddress(email);
     if (!verified.ok) return jsonErr(verified.message, 400);
+
+    if (phone) {
+        const phoneVerified = await verifyPhoneNumber(phone);
+        if (!phoneVerified.ok) return jsonErr(phoneVerified.message, 400);
+    }
 
     const exists = await prisma.user.findFirst({
       where: { OR: [{ email }, { username }] },

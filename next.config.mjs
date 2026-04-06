@@ -7,6 +7,7 @@
  */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Added for production deployment (Hostinger/VPS)
   typescript: {
     ignoreBuildErrors: true,
   },

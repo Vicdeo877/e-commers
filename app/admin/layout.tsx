@@ -7,10 +7,13 @@ import Link from "next/link";
 import {
   LayoutDashboard, ShoppingBag, Package, Tag, Image, FileText,
   Star, Leaf, LogOut, ChevronRight, Loader2, Users, UserCog, Settings, Percent,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatBot } from "@/components/ChatBot";
 import ThemeRoot from "@/components/ThemeRoot";
+import { useState } from "react";
+import api from "@/lib/api";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -30,6 +33,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+
+  /* Poll for new orders every 30 seconds */
+  useEffect(() => {
+    if (user?.role !== "admin") return;
+    
+    const checkNewOrders = async () => {
+        try {
+            const res = await api.get("/admin/orders?status=pending&per_page=1");
+            const count = res.data?.pagination?.total ?? 0;
+            setNewOrdersCount(count);
+        } catch (e) {
+            console.error("Failed to fetch new orders count", e);
+        }
+    };
+
+    checkNewOrders();
+    const interval = setInterval(checkNewOrders, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     if (!loading) {
@@ -41,9 +64,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   /* ── Loading state ── */
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 text-gray-400">
-          <Loader2 className="w-8 h-8 animate-spin text-green-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-sm">Loading admin panel…</p>
         </div>
       </div>
@@ -53,9 +76,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   /* ── Not authenticated / not admin — show redirect message ── */
   if (!user || user.role !== "admin") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 text-gray-400">
-          <Loader2 className="w-8 h-8 animate-spin text-green-400" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-sm">Redirecting to login…</p>
         </div>
       </div>
@@ -66,7 +89,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     item.exact ? pathname === item.href : pathname.startsWith(item.href);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background text-foreground">
       {/* ── Desktop Sidebar ── */}
       <aside className="hidden md:flex flex-col w-64 bg-gray-900 text-gray-300 shrink-0 fixed inset-y-0 left-0 z-30">
         {/* Brand */}
@@ -97,6 +120,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <item.icon className="w-4 h-4 shrink-0" />
                 <span className="flex-1">{item.label}</span>
+                {item.label === "Orders" && newOrdersCount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full animate-pulse mr-1">
+                    {newOrdersCount}
+                  </span>
+                )}
                 {active && <ChevronRight className="w-3.5 h-3.5 opacity-70" />}
               </Link>
             );
@@ -106,7 +134,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* User */}
         <div className="px-3 py-4 border-t border-gray-800">
           <div className="flex items-center gap-3 px-3 py-2 mb-1">
-            <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center text-white text-sm font-bold shrink-0">
               {user.full_name?.[0]?.toUpperCase() ?? "A"}
             </div>
             <div className="min-w-0">
@@ -126,7 +154,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* ── Mobile Top Bar ── */}
       <div className="md:hidden fixed top-0 inset-x-0 z-40 bg-gray-900 text-white flex items-center gap-3 px-4 py-3 border-b border-gray-800">
-        <div className="w-7 h-7 bg-green-600 rounded-lg flex items-center justify-center">
+        <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
           <Leaf className="w-4 h-4 text-white" />
         </div>
         <span className="font-bold text-sm flex-1">Admin Panel</span>
@@ -154,13 +182,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      <ChatBot 
-        apiEndpoint="/api/admin/bliss-admin-hub" 
-        title="Admin Hub AI" 
-        theme="admin"
-        placeholder="Request system guidance..."
-        initialMessage="Bliss-Admin Hub v3.0 Online. Agent ready to assist with automated orders, inventory logic, or platform settings. What is your priority today, Admin?"
-      />
     </div>
   );
 }

@@ -14,8 +14,9 @@ export async function POST(req: Request) {
       return jsonErr("Invalid payload", 400);
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET;
-    if (!secret) return jsonErr("Server misconfiguration", 500);
+    const paySec = await prisma.settingsPayment.findFirst();
+    const secret = paySec?.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) return jsonErr("Server misconfiguration (Razorpay secret not set)", 500);
 
     const expected = crypto
       .createHmac("sha256", secret)
@@ -39,6 +40,10 @@ export async function POST(req: Request) {
         orderStatus: "confirmed",
       },
     });
+
+    // Fire-and-forget email for Razorpay
+    const { sendOrderNotification } = await import("@/lib/server/email");
+    void sendOrderNotification(local_order_id);
 
     return jsonOk({ message: "Payment verified" });
   } catch (e) {

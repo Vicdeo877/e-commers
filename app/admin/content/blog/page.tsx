@@ -85,56 +85,56 @@ export default function AdminBlogPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Blog Posts</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{posts.length} posts</p>
+          <h1 className="text-2xl font-bold text-foreground">Blog Posts</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{posts.length} published articles</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
-          <Plus className="w-4 h-4" /> New Post
+        <button onClick={openCreate} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-primary/20 uppercase tracking-widest">
+          <Plus className="w-4 h-4" /> New Blog Post
         </button>
       </div>
 
       {loading ? (
-        <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="bg-white rounded-2xl h-16 animate-pulse border" />)}</div>
+        <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="bg-card rounded-2xl h-20 animate-pulse border border-card" />)}</div>
       ) : posts.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
-          <FileText className="w-12 h-12 mx-auto mb-3 opacity-25" />
-          <p className="font-medium mb-1">No blog posts yet</p>
-          <p className="text-sm">Click "New Post" to write your first article.</p>
+        <div className="bg-card rounded-2xl border border-card shadow-sm p-16 text-center text-gray-500">
+          <FileText className="w-12 h-12 mx-auto mb-4 opacity-50 text-gray-300 dark:text-gray-700" />
+          <p className="font-bold text-lg text-foreground mb-1">No articles found</p>
+          <p className="text-sm opacity-60">Click "New Blog Post" to share your first story with customers.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-card shadow-sm overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-card">
               <tr>
-                {["Title", "Published", "Status", "Actions"].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                {["Article Title", "Publication Date", "Visibility", "Actions"].map((h) => (
+                  <th key={h} className="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-card">
               {posts.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-800 line-clamp-1">{p.title}</p>
-                    {p.excerpt && <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{p.excerpt}</p>}
+                <tr key={p.id} className="hover:bg-gray-50/30 dark:hover:bg-gray-800/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <p className="font-bold text-foreground line-clamp-1">{p.title}</p>
+                    {p.excerpt && <p className="text-xs text-gray-400 line-clamp-1 mt-1 italic">{p.excerpt}</p>}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
-                    {p.published_at ? new Date(p.published_at).toLocaleDateString("en-IN") : "—"}
+                  <td className="px-6 py-4 text-xs font-medium text-gray-500">
+                    {p.published_at ? new Date(p.published_at).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' }) : <span className="opacity-30 italic">Not set</span>}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${p.is_published ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700"}`}>
-                      {p.is_published ? "Published" : "Draft"}
+                  <td className="px-6 py-4">
+                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border transition-all ${p.is_published ? "bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200" : "bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200"}`}>
+                      {p.is_published ? "Published" : "Draft Mode"}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button onClick={() => openEdit(p)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600" title="Edit">
+                      <button onClick={() => openEdit(p)} className="p-2.5 rounded-xl hover:bg-primary/10 text-primary transition-all border border-transparent hover:border-primary/20" title="Edit Article">
                         <Pencil className="w-4 h-4" />
                       </button>
-                      <Link href={`/blog/${p.slug}`} target="_blank" className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500" title="View on site">
+                      <Link href={`/blog/${p.slug}`} target="_blank" className="p-2.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-foreground transition-all border border-transparent" title="View Article on Site">
                         <ExternalLink className="w-4 h-4" />
                       </Link>
-                      <button onClick={() => handleDelete(p.id, p.title)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500" title="Delete">
+                      <button onClick={() => handleDelete(p.id, p.title)} className="p-2.5 rounded-xl hover:bg-red-500/10 text-red-500 transition-all border border-transparent hover:border-red-500/20" title="Delete Article">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -148,13 +148,13 @@ export default function AdminBlogPage() {
 
       {/* ── Modal ── */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
-              <h2 className="font-bold text-gray-900 text-lg">{editing ? "Edit Post" : "New Blog Post"}</h2>
-              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all animate-in fade-in">
+          <div className="bg-card rounded-2xl shadow-2xl border border-card w-full max-w-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-card sticky top-0 bg-card z-10">
+              <h2 className="font-bold text-foreground text-xl">{editing ? "Edit Blog Article" : "Compose New Article"}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
             </div>
-            <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+            <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
               {/* Cover image */}
               <ImageUpload
                 folder="blog"
@@ -164,37 +164,37 @@ export default function AdminBlogPage() {
               />
 
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Post Title *</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Article Headline *</label>
                 <input required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Nature's Sweet Treats"
-                  className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Excerpt (shown in preview cards)</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Short Excerpt (SEO Preview)</label>
                 <textarea rows={2} value={form.excerpt} onChange={(e) => setForm((f) => ({ ...f, excerpt: e.target.value }))}
-                  placeholder="Short summary of the post..."
-                  className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300 resize-none" />
+                  placeholder="Compelling summary of the post..."
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all resize-none italic" />
               </div>
 
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Content (HTML supported)</label>
-                <textarea rows={8} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
-                  placeholder="<p>Write your full post content here. You can use basic HTML tags for formatting.</p>"
-                  className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300 resize-none font-mono" />
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Main Content (Rich Text / HTML)</label>
+                <textarea rows={10} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
+                  placeholder="<p>Craft your beautiful story here content here...</p>"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all resize-none font-mono leading-relaxed" />
               </div>
 
-              <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="checkbox" checked={form.is_published} onChange={(e) => setForm((f) => ({ ...f, is_published: e.target.checked }))} className="rounded" />
-                <span className="text-gray-700">Publish immediately (visible to customers)</span>
+              <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-card transition-colors hover:border-primary/20">
+                <input type="checkbox" checked={form.is_published} onChange={(e) => setForm((f) => ({ ...f, is_published: e.target.checked }))} className="w-5 h-5 rounded border-card text-primary focus:ring-primary/20 bg-card" />
+                <span className="text-sm font-bold text-gray-500 hover:text-foreground">Publish Immediately <span className="text-[10px] font-normal uppercase tracking-wide opacity-40 ml-1">(live on site)</span></span>
               </label>
 
-              <div className="flex gap-3 pt-2 border-t">
+              <div className="flex gap-4 pt-6 border-t border-card">
                 <button type="submit" disabled={saving}
-                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors">
-                  {saving ? "Saving…" : editing ? "Update Post" : "Publish Post"}
+                  className="bg-primary hover:bg-primary-hover disabled:opacity-60 text-white px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+                  {saving ? "Processing…" : editing ? "Update Article" : "Publish Article"}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="text-gray-500 text-sm px-4">Cancel</button>
+                <button type="button" onClick={() => setShowModal(false)} className="text-gray-500 font-bold text-xs uppercase tracking-widest px-4 hover:text-foreground transition-colors">Cancel</button>
               </div>
             </form>
           </div>

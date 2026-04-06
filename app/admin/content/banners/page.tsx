@@ -78,53 +78,53 @@ export default function AdminBannersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Site Banners</h1>
+          <h1 className="text-2xl font-bold text-foreground">Site Banners</h1>
           <p className="text-sm text-gray-500 mt-0.5">Hero images, offer strips and promo banners</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+        <button onClick={openCreate} className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-primary/20 uppercase tracking-widest">
           <Plus className="w-4 h-4" /> Add Banner
         </button>
       </div>
 
       {loading ? (
-        <div className="space-y-3">{[1, 2].map((i) => <div key={i} className="bg-white rounded-2xl h-24 animate-pulse border" />)}</div>
+        <div className="space-y-4">{[1, 2].map((i) => <div key={i} className="bg-card rounded-3xl h-28 animate-pulse border border-card" />)}</div>
       ) : banners.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
-          <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-25" />
-          <p className="font-medium mb-1">No banners yet</p>
-          <p className="text-sm">Click "Add Banner" to create your first banner.</p>
+        <div className="bg-card rounded-3xl border border-card shadow-sm p-16 text-center text-gray-500">
+          <ImageIcon className="w-12 h-12 mx-auto mb-4 opacity-50 text-gray-300 dark:text-gray-700" />
+          <p className="font-bold text-lg text-foreground mb-1">No banners configured</p>
+          <p className="text-sm opacity-60">Click "Add Banner" to create your first visual promotion.</p>
         </div>
       ) : (
         <div className="grid gap-4">
           {banners.map((b) => (
-            <div key={b.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex">
+            <div key={b.id} className="bg-card rounded-2xl border border-card shadow-sm overflow-hidden flex transition-all hover:shadow-md hover:border-primary/20 group">
               {/* Thumbnail */}
-              <div className="w-32 h-24 shrink-0 relative overflow-hidden">
+              <div className="w-40 h-28 shrink-0 relative overflow-hidden bg-gray-100 dark:bg-gray-900">
                 <AppImage
-                  src={b.image_path ? imgUrl(b.image_path) : null}
+                  src={b.image_path ? (b.image_path.startsWith('http') ? b.image_path : imgUrl(b.image_path)) : null}
                   alt={b.title}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform group-hover:scale-105"
                   placeholderName={b.title}
                   placeholderType="banner"
                 />
               </div>
               {/* Info */}
-              <div className="flex-1 px-4 py-3 flex items-start justify-between gap-3">
+              <div className="flex-1 px-5 py-4 flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <p className="font-semibold text-gray-800">{b.title}</p>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded capitalize">{b.placement}</span>
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${b.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                  <div className="flex items-center gap-3 flex-wrap mb-2">
+                    <p className="font-bold text-foreground text-lg">{b.title}</p>
+                    <span className="text-[10px] font-bold uppercase tracking-widest bg-primary/10 text-primary px-2.5 py-1 rounded-lg border border-primary/20">{b.placement}</span>
+                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border transition-all ${b.is_active ? "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-200" : "bg-gray-100 dark:bg-gray-500/20 text-gray-500 dark:text-gray-400 border-gray-200"}`}>
                       {b.is_active ? "Active" : "Inactive"}
                     </span>
                   </div>
-                  {b.subtitle && <p className="text-sm text-gray-500 line-clamp-1">{b.subtitle}</p>}
-                  {b.link_url && <p className="text-xs text-blue-500 mt-0.5">{b.link_url}</p>}
+                  {b.subtitle && <p className="text-sm text-gray-500 line-clamp-1 italic">{b.subtitle}</p>}
+                  {b.link_url && <p className="text-[11px] font-mono font-medium text-gray-400 mt-1.5 opacity-60 hover:opacity-100 transition-opacity">{b.link_url}</p>}
                 </div>
                 <div className="flex gap-2 shrink-0">
-                  <button onClick={() => openEdit(b)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600"><Pencil className="w-4 h-4" /></button>
-                  <button onClick={() => handleDelete(b.id, b.title)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-500"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => openEdit(b)} className="p-2.5 rounded-xl hover:bg-primary/10 text-primary transition-all border border-transparent hover:border-primary/20"><Pencil className="w-4 h-4" /></button>
+                  <button onClick={() => handleDelete(b.id, b.title)} className="p-2.5 rounded-xl hover:bg-red-500/10 text-red-500 transition-all border border-transparent hover:border-red-500/20"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
             </div>
@@ -134,13 +134,13 @@ export default function AdminBannersPage() {
 
       {/* â”€â”€ Modal â”€â”€ */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white">
-              <h2 className="font-bold text-gray-900 text-lg">{editing ? "Edit Banner" : "Add New Banner"}</h2>
-              <button onClick={() => setShowModal(false)}><X className="w-5 h-5 text-gray-400" /></button>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm transition-all animate-in fade-in">
+          <div className="bg-card rounded-2xl shadow-2xl border border-card w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-card sticky top-0 bg-card">
+              <h2 className="font-bold text-foreground text-xl">{editing ? "Edit Banner" : "New Visual Banner"}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
             </div>
-            <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+            <form onSubmit={handleSubmit} className="px-6 py-6 space-y-6">
               {/* Image */}
               <ImageUpload
                 folder="banner"
@@ -150,47 +150,47 @@ export default function AdminBannersPage() {
               />
 
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Title *</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Display Title *</label>
                 <input required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Summer Sale 20% Off"
-                  className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Subtitle / Description</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Tagline / Description</label>
                 <input value={form.subtitle} onChange={(e) => setForm((f) => ({ ...f, subtitle: e.target.value }))}
-                  placeholder="Short tagline shown below the title"
-                  className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                  placeholder="Shown below the title"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Link URL</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Action Link</label>
                   <input value={form.link_url} onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
                     placeholder="/shop"
-                    className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground font-mono transition-all" />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Sort Order</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Priority Ord.</label>
                   <input type="number" value={form.sort_order} onChange={(e) => setForm((f) => ({ ...f, sort_order: e.target.value }))}
-                    className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Placement</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Site Placement</label>
                 <select value={form.placement} onChange={(e) => setForm((f) => ({ ...f, placement: e.target.value }))}
-                  className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300">
-                  {PLACEMENTS.map((p) => <option key={p} value={p} className="capitalize">{p}</option>)}
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all">
+                  {PLACEMENTS.map((p) => <option key={p} value={p} className="capitalize dark:bg-gray-900">{p}</option>)}
                 </select>
               </div>
-              <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="rounded" />
-                <span className="text-gray-700">Active (shown on site)</span>
+              <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-card transition-colors hover:border-primary/20">
+                <input type="checkbox" checked={form.is_active} onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))} className="w-5 h-5 rounded border-card text-primary focus:ring-primary/20 bg-card" />
+                <span className="text-sm font-bold text-gray-500 hover:text-foreground">Banner is Active <span className="text-[10px] font-normal uppercase tracking-wide opacity-40 ml-1">(currently visible on site)</span></span>
               </label>
-              <div className="flex gap-3 pt-2 border-t">
+              <div className="flex gap-4 pt-6 border-t border-card">
                 <button type="submit" disabled={saving}
-                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-colors">
-                  {saving ? "Savingâ€¦" : editing ? "Update Banner" : "Create Banner"}
+                  className="bg-primary hover:bg-primary-hover disabled:opacity-60 text-white px-8 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-primary/20">
+                  {saving ? "Saving…" : editing ? "Update Banner" : "Create Banner"}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="text-gray-500 text-sm px-4">Cancel</button>
+                <button type="button" onClick={() => setShowModal(false)} className="text-gray-500 font-bold text-xs uppercase tracking-widest px-4 hover:text-foreground transition-colors">Cancel</button>
               </div>
             </form>
           </div>

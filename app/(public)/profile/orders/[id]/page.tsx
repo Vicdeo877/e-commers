@@ -20,6 +20,7 @@ interface Order {
   coupon_code?: string; razorpay_payment_id?: string; tracking_number?: string;
   shipping_name?: string; shipping_phone?: string; shipping_address?: string;
   shipping_city?: string; shipping_state?: string; shipping_pincode?: string;
+  location_link?: string;
   items?: OrderItem[]; created_at: string; updated_at?: string;
 }
 
@@ -104,12 +105,12 @@ export default function OrderTrackingPage() {
         <ArrowLeft className="w-4 h-4" /> Back to Orders
       </button>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-card shadow-sm overflow-hidden">
         {/* ── Header ── */}
-        <div className="px-6 py-5 border-b border-gray-100">
+        <div className="px-6 py-5 border-b border-card">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Order Tracking</h1>
+              <h1 className="text-lg font-bold text-foreground">Order Tracking</h1>
               <p className="text-sm text-gray-500 mt-0.5">
                 Tracking ID: <span className="font-semibold text-gray-800">{order.order_number}</span>
                 {order.tracking_number && (
@@ -202,8 +203,8 @@ export default function OrderTrackingPage() {
               </div>
               {/* content */}
               <div className="flex-1 min-w-0 -mt-0.5">
-                <p className={`font-semibold text-sm ${ev.active ? "text-gray-900" : "text-gray-500"}`}>{ev.label}</p>
-                <p className={`text-xs ${ev.active ? "text-green-600" : "text-gray-400"}`}>{ev.desc}</p>
+                <p className={`font-semibold text-sm ${ev.active ? "text-foreground" : "text-gray-500"}`}>{ev.label}</p>
+                <p className={`text-xs ${ev.active ? "text-primary" : "text-gray-400"}`}>{ev.desc}</p>
                 {ev.loc && ev.loc !== "—" && (
                   <p className={`text-xs ${ev.active ? "text-gray-500" : "text-gray-400"}`}>Location: {ev.loc}</p>
                 )}
@@ -218,41 +219,47 @@ export default function OrderTrackingPage() {
 
         {/* ── Order Items ── */}
         {order.items && order.items.length > 0 && (
-          <div className="mx-6 mb-5 border border-gray-100 rounded-2xl overflow-hidden">
-            <div className="bg-gray-50 px-4 py-2 border-b">
+          <div className="mx-6 mb-5 border border-card rounded-2xl overflow-hidden">
+            <div className="bg-gray-50/50 dark:bg-gray-800/30 px-4 py-2 border-b border-card">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Items in this order</p>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-gray-50 dark:divide-gray-800">
               {order.items.map((item) => (
                 <div key={item.id} className="px-4 py-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-sm">🍎</div>
+                    <div className="w-8 h-8 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center text-sm">🍎</div>
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{item.name}</p>
+                      <p className="text-sm font-medium text-foreground">{item.name}</p>
                       <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
                     </div>
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">{formatPrice(item.total)}</span>
+                  <span className="text-sm font-semibold text-foreground">{formatPrice(item.total)}</span>
                 </div>
               ))}
             </div>
-            <div className="bg-gray-50 px-4 py-2 border-t flex justify-between text-sm">
+            <div className="bg-gray-50/50 dark:bg-gray-800/30 px-4 py-2 border-t border-card flex justify-between text-sm">
               <span className="text-gray-500">Order Total</span>
-              <span className="font-bold text-gray-900">{formatPrice(order.total)}</span>
+              <span className="font-bold text-foreground">{formatPrice(order.total)}</span>
             </div>
           </div>
         )}
 
         {/* ── Delivery Address ── */}
         {order.shipping_name && (
-          <div className="mx-6 mb-5 flex items-start gap-3 bg-gray-50 rounded-2xl px-4 py-3">
-            <MapPin className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
-            <div>
+          <div className="mx-6 mb-5 flex items-start gap-3 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl px-4 py-3">
+            <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+            <div className="flex-1">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-0.5">Delivery Address</p>
-              <p className="text-sm text-gray-800">
+              <p className="text-sm text-foreground">
                 {order.shipping_address}, {order.shipping_city}, {order.shipping_state} - {order.shipping_pincode}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">{order.shipping_name} · {order.shipping_phone}</p>
+                {order.location_link && (
+                  <a href={order.location_link} target="_blank" rel="noopener noreferrer" 
+                     className="inline-flex items-center gap-1.5 text-xs text-primary font-bold mt-1.5 hover:underline decoration-dotted transition-all">
+                    View Pinned Location on Map →
+                  </a>
+                )}
+              <p className="text-xs text-gray-400 mt-1.5">{order.shipping_name} · {order.shipping_phone}</p>
             </div>
           </div>
         )}

@@ -138,90 +138,96 @@ export default function AdminOffersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Offers &amp; deals</h1>
+          <h1 className="text-2xl font-bold text-foreground">Offers & Deals</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Cards shown on the homepage amber strip. Turn on Highlight to feature an offer with a badge and stronger card styling.
+            Manage promotional cards shown on the homepage hero strip.
           </p>
         </div>
         <button
           type="button"
           onClick={openCreate}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+          className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-md shadow-primary/20 uppercase tracking-widest"
         >
-          <Plus className="w-4 h-4" /> Add offer
+          <Plus className="w-4 h-4" /> Add Offer
         </button>
       </div>
 
       {loading ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="bg-white rounded-2xl h-20 animate-pulse border border-gray-100" />
+            <div key={i} className="bg-card rounded-2xl h-24 animate-pulse border border-card" />
           ))}
         </div>
       ) : offers.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
-          <p className="font-medium mb-1">No offers yet</p>
-          <p className="text-sm">Add offers to populate the homepage “Offers &amp; deals” section.</p>
+        <div className="bg-card rounded-2xl border border-card shadow-sm p-16 text-center text-gray-500">
+          <p className="font-bold text-lg text-foreground mb-1">No active offers</p>
+          <p className="text-sm opacity-60">Populate the homepage “Offers & Deals” section by creating your first card.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-2xl border border-card shadow-sm overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-card">
               <tr>
-                {["Order", "Title", "Coupon", "Highlight", "Active", "Actions"].map((h) => (
+                {["Order", "Offer Details", "Coupon", "Status", "Visibility", "Actions"].map((h) => (
                   <th
                     key={h}
-                    className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"
+                    className="text-left px-6 py-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest"
                   >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-card">
               {offers.map((o) => (
-                <tr key={o.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3 text-gray-600 font-mono">{o.sort_order}</td>
-                  <td className="px-4 py-3">
-                    <p className="font-semibold text-gray-900">{o.title}</p>
-                    <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{o.description}</p>
+                <tr key={o.id} className="hover:bg-gray-50/30 dark:hover:bg-gray-800/30 transition-colors">
+                  <td className="px-6 py-4 text-primary font-bold font-mono text-xs">{o.sort_order}</td>
+                  <td className="px-6 py-4">
+                    <p className="font-bold text-foreground">{o.title}</p>
+                    <p className="text-xs text-gray-400 line-clamp-1 mt-0.5 italic">{o.description}</p>
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-amber-800">
-                    {o.coupon_code ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {o.highlight ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
-                        <Sparkles className="w-3 h-3" /> Yes
+                  <td className="px-6 py-4">
+                    {o.coupon_code ? (
+                      <span className="font-mono text-[10px] font-bold bg-amber-500/10 text-amber-600 px-2 py-1 rounded-lg border border-amber-500/20 uppercase">
+                        {o.coupon_code}
                       </span>
                     ) : (
-                      <span className="text-gray-400 text-xs">No</span>
+                      <span className="text-gray-300 dark:text-gray-700 italic text-xs">—</span>
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-6 py-4">
+                    {o.highlight ? (
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                        <Sparkles className="w-3 h-3" /> Featured
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest opacity-40">Standard</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4">
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        o.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                      className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border transition-all ${
+                        o.is_active ? "bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200" : "bg-gray-100 dark:bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-200"
                       }`}
                     >
                       {o.is_active ? "Live" : "Hidden"}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        title="Edit"
+                        title="Edit Offer"
                         onClick={() => openEdit(o)}
-                        className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50"
+                        className="p-2.5 rounded-xl hover:bg-primary/10 text-primary transition-all border border-transparent hover:border-primary/20"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
-                        title="Delete"
+                        title="Delete Offer"
                         onClick={() => void handleDelete(o)}
-                        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50"
+                        className="p-2.5 rounded-xl hover:bg-red-500/10 text-red-500 transition-all border border-transparent hover:border-red-500/20"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -235,103 +241,107 @@ export default function AdminOffersPage() {
       )}
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all animate-in fade-in">
           <div
-            className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6"
+            className="bg-card rounded-2xl shadow-2xl border border-card max-w-lg w-full max-h-[90vh] overflow-y-auto p-8"
             role="dialog"
             aria-labelledby="offer-modal-title"
           >
-            <h2 id="offer-modal-title" className="text-lg font-bold text-gray-900 mb-4">
-              {editing ? "Edit offer" : "New offer"}
+            <h2 id="offer-modal-title" className="text-xl font-bold text-foreground mb-8">
+              {editing ? "Refine Offer" : "New Promotional Deal"}
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Title *</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Offer Headline *</label>
                 <input
                   required
                   value={form.title}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full border rounded-xl px-3 py-2 text-sm"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all"
                   placeholder="e.g. Free shipping over ₹500"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Description *</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Full Description *</label>
                 <textarea
                   required
                   rows={3}
                   value={form.description}
                   onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  className="w-full border rounded-xl px-3 py-2 text-sm"
-                  placeholder="Short text shown under the title on the homepage"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all resize-none italic leading-relaxed"
+                  placeholder="Appears prominently in the offer card..."
                 />
               </div>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Coupon code (optional)</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Optional Code</label>
                   <input
                     value={form.coupon_code}
                     onChange={(e) => setForm((f) => ({ ...f, coupon_code: e.target.value.toUpperCase() }))}
-                    className="w-full border rounded-xl px-3 py-2 text-sm font-mono"
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm font-mono text-amber-500 outline-none focus:ring-2 focus:ring-amber-500/20 transition-all uppercase"
                     placeholder="WELCOME10"
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Display value (₹ or % label)</label>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Display Value</label>
                   <input
                     type="number"
                     min={0}
                     step={0.01}
                     value={form.discount_value}
                     onChange={(e) => setForm((f) => ({ ...f, discount_value: e.target.value }))}
-                    className="w-full border rounded-xl px-3 py-2 text-sm"
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all"
                     placeholder="0"
                   />
-                  <p className="text-[11px] text-gray-400 mt-1">For display only; real discounts use Coupons.</p>
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1 block">Sort order</label>
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Display Priority</label>
                 <input
                   type="number"
                   value={form.sort_order}
                   onChange={(e) => setForm((f) => ({ ...f, sort_order: e.target.value }))}
-                  className="w-full border rounded-xl px-3 py-2 text-sm max-w-[120px]"
+                  className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm max-w-[120px] outline-none focus:ring-2 focus:ring-primary/20 text-foreground"
                 />
-                <p className="text-[11px] text-gray-400 mt-1">Lower numbers appear first.</p>
+                <p className="text-[10px] text-gray-400 mt-2 italic opacity-60">Successive offers are sorted by this value (1, 2, 3...)</p>
               </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.highlight}
-                  onChange={(e) => setForm((f) => ({ ...f, highlight: e.target.checked }))}
-                  className="rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-                />
-                <span className="text-sm text-gray-800">
-                  Highlight on homepage (featured badge + stronger card)
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.is_active}
-                  onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
-                />
-                <span className="text-sm text-gray-800">Show on storefront</span>
-              </label>
-              <div className="flex gap-3 pt-2">
+              <div className="space-y-3 pt-2">
+                <label className="flex items-center gap-3 cursor-pointer p-4 bg-amber-500/5 dark:bg-amber-500/10 rounded-2xl border border-amber-500/20 transition-all hover:bg-amber-500/10 group">
+                  <input
+                    type="checkbox"
+                    checked={form.highlight}
+                    onChange={(e) => setForm((f) => ({ ...f, highlight: e.target.checked }))}
+                    className="w-5 h-5 rounded border-amber-500/30 text-amber-500 focus:ring-amber-500/20 bg-card"
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-amber-600 group-hover:text-amber-500 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" /> High-Intensity Feature
+                    </span>
+                    <span className="text-[10px] text-gray-400 font-medium">Adds visual badge and stronger highlights</span>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-card transition-colors hover:border-primary/20">
+                  <input
+                    type="checkbox"
+                    checked={form.is_active}
+                    onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
+                    className="w-5 h-5 rounded border-card text-primary focus:ring-primary/20 bg-card"
+                  />
+                  <span className="text-sm font-bold text-gray-500 hover:text-foreground italic">Publish immediately on storefront</span>
+                </label>
+              </div>
+              <div className="flex gap-4 pt-8 border-t border-card">
                 <button
                   type="submit"
                   disabled={saving}
-                  className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-5 py-2 rounded-xl text-sm font-semibold"
+                  className="bg-primary hover:bg-primary-hover disabled:opacity-60 text-white px-8 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all shadow-lg shadow-primary/20 min-w-[140px]"
                 >
-                  {saving ? "Saving…" : editing ? "Save" : "Create"}
+                  {saving ? "Saving…" : editing ? "Update Offer" : "Create Offer"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="text-gray-500 text-sm px-4"
+                  className="text-gray-500 font-bold text-[11px] uppercase tracking-widest px-4 hover:text-foreground transition-colors"
                 >
                   Cancel
                 </button>

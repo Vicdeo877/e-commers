@@ -10,7 +10,7 @@ import { trackBeginCheckoutEcommerce } from "@/lib/analytics-track";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import Link from "next/link";
-import { ShieldCheck, Truck, CreditCard, Banknote, CheckCircle2, Loader2 } from "lucide-react";
+import { ShieldCheck, Truck, CreditCard, Banknote, CheckCircle2, Loader2, Tag, MapPin, LocateFixed } from "lucide-react";
 
 /* ── Razorpay window type ── */
 declare global {
@@ -28,6 +28,7 @@ interface ShippingForm {
   shipping_pincode: string;
   notes: string;
   guest_email: string;
+  location_link?: string;
 }
 
 interface SavedAddressRow {
@@ -57,6 +58,9 @@ function CheckoutContent() {
   const beginCheckoutFired = useRef(false);
   const [discountPreview, setDiscountPreview] = useState(0);
   const [resolvedCouponLabel, setResolvedCouponLabel] = useState<string | null>(null);
+  const [activeCoupon, setActiveCoupon] = useState<string>(couponCode);
+  const [couponInput, setCouponInput] = useState<string>(couponCode);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   const [form, setForm] = useState<ShippingForm>({
     shipping_name: "", shipping_phone: "", shipping_address: "",
@@ -74,6 +78,12 @@ function CheckoutContent() {
   const [rzpReady, setRzpReady] = useState(false);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddressRow[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+
+  /* Map & Geolocation States */
+  const [mapReady, setMapReady] = useState(false);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const [locating, setLocating] = useState(false);
 
   const applySavedAddress = useCallback(
     (addr: SavedAddressRow, profilePhone?: string) => {
@@ -156,7 +166,8 @@ function CheckoutContent() {
       return;
     }
     let cancelled = false;
-    const trimmed = couponCode.trim();
+    const trimmed = activeCoupon.trim();
+    setApplyingCoupon(true);
     void api
       .post("/checkout/initiate", {
         dry_run: true,
@@ -167,17 +178,25 @@ function CheckoutContent() {
         setDiscountPreview(Number(res.data?.data?.discount_amount ?? 0));
         const c = res.data?.data?.coupon_code;
         setResolvedCouponLabel(c != null && String(c).trim() !== "" ? String(c) : null);
+        if (c) {
+          setActiveCoupon(String(c));
+          setCouponInput(String(c).toUpperCase());
+        }
       })
       .catch(() => {
         if (!cancelled) {
           setDiscountPreview(0);
           setResolvedCouponLabel(null);
+          if (activeCoupon) toast.error("Invalid or expired coupon");
         }
+      })
+      .finally(() => {
+        if (!cancelled) setApplyingCoupon(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [items, total, couponCode]);
+  }, [items, total, activeCoupon]);
 
   useEffect(() => {
     if (!settings || items.length === 0 || beginCheckoutFired.current) return;
@@ -194,6 +213,92 @@ function CheckoutContent() {
       })),
     });
   }, [settings, items, total]);
+
+  /* Load Leaflet SDK */
+  useEffect(() => {
+    if (document.getElementById("leaflet-css")) { setMapReady(true); return; }
+    
+    const link = document.createElement("link");
+    link.id = "leaflet-css";
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(link);
+
+    const script = document.createElement("script");
+    script.id = "leaflet-js";
+    script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    script.onload = () => setMapReady(true);
+    document.head.appendChild(script);
+  }, []);
+
+  /* Initialize Map */
+  const initMap = useCallback((lat: number, lng: number) => {
+    if (typeof window === "undefined" || !(window as any).L || !mapReady) return;
+    const L = (window as any).L;
+    
+    if (mapRef.current) {
+        mapRef.current.setView([lat, lng], 16);
+        if (markerRef.current) markerRef.current.setLatLng([lat, lng]);
+        return;
+    }
+
+    const map = L.map("checkout-map", { zoomControl: false }).setView([lat, lng], 16);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    
+    marker.on("dragend", async () => {
+        const pos = marker.getLatLng();
+        await reverseGeocode(pos.lat, pos.lng);
+    });
+
+    mapRef.current = map;
+    markerRef.current = marker;
+  }, [mapReady]);
+
+  const reverseGeocode = async (lat: number, lng: number) => {
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+        const data = await res.json();
+        if (data && data.address) {
+            const a = data.address;
+            setForm(f => ({
+                ...f,
+                shipping_address: [a.house_number, a.road, a.suburb, a.neighbourhood].filter(Boolean).join(", ") || f.shipping_address,
+                shipping_city: a.city || a.town || a.village || f.shipping_city,
+                shipping_state: a.state || f.shipping_state,
+                shipping_pincode: a.postcode || f.shipping_pincode,
+                location_link: `https://www.google.com/maps?q=${lat},${lng}`
+            }));
+            toast.success("Location updated!");
+        }
+    } catch (e) {
+        console.error("Geocoding failed", e);
+    }
+  };
+
+  const handleUseLocation = () => {
+    if (!navigator.geolocation) {
+        toast.error("Geolocation is not supported by your browser");
+        return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+            const { latitude, longitude } = pos.coords;
+            initMap(latitude, longitude);
+            await reverseGeocode(latitude, longitude);
+            setLocating(false);
+        },
+        (err) => {
+            toast.error("Could not fetch location. Please enable GPS.");
+            setLocating(false);
+        },
+        { enableHighAccuracy: true }
+    );
+  };
 
   /* Load Razorpay SDK */
   useEffect(() => {
@@ -212,14 +317,14 @@ function CheckoutContent() {
   const afterDiscount = Math.max(0, total - discountPreview);
   const shippingAmount = afterDiscount >= freeShipMin ? 0 : shipFlat;
   const grandTotal = afterDiscount + shippingAmount;
-  const couponLabel = resolvedCouponLabel || (couponCode.trim() || null);
+  const couponLabel = resolvedCouponLabel || (activeCoupon.trim() || null);
 
   /* ── COD flow ── */
   const placeCOD = useCallback(async () => {
       const res = await api.post("/checkout/initiate", {
         ...form,
         payment_method: "cod",
-        coupon_code: couponCode || undefined,
+        coupon_code: activeCoupon || undefined,
       });
       const order = res.data?.data;
       await refresh();
@@ -228,7 +333,7 @@ function CheckoutContent() {
 
   /* ── Razorpay flow ── */
   const placeRazorpay = useCallback(async () => {
-    const rzpKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const rzpKey = settings?.payment.razorpay_key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
     if (!rzpKey) { toast.error("Razorpay not configured."); return; }
     if (!rzpReady) { toast.error("Razorpay SDK not loaded yet, please wait."); return; }
 
@@ -236,7 +341,7 @@ function CheckoutContent() {
     const res = await api.post("/checkout/initiate", {
       ...form,
       payment_method: "razorpay",
-      coupon_code: couponCode || undefined,
+      coupon_code: activeCoupon || undefined,
     });
     const orderData = res.data?.data;
 
@@ -322,7 +427,15 @@ function CheckoutContent() {
     }
   };
 
-  const inputCls = "w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-300";
+  const inputCls = "w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-green-100 focus:bg-white transition-all bg-gray-50";
+
+  const applyCoupon = () => {
+    setActiveCoupon(couponInput.trim());
+    if (couponInput.trim()) {
+      toast.loading("Applying coupon...", { id: "coupon-apply" });
+      setTimeout(() => toast.dismiss("coupon-apply"), 1000);
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
@@ -387,6 +500,20 @@ function CheckoutContent() {
               </div>
             )}
             <div className="grid sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2 space-y-3">
+                 <button 
+                  type="button" 
+                  onClick={handleUseLocation}
+                  disabled={locating}
+                  className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-primary/30 rounded-xl text-primary font-bold text-sm hover:bg-primary/5 transition-all"
+                >
+                  {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <LocateFixed className="w-4 h-4" />}
+                  Use Current Location
+                </button>
+                
+                <div id="checkout-map" className="h-48 rounded-2xl bg-gray-100 border border-card overflow-hidden z-10 shadow-inner" />
+              </div>
+
               <div>
                 <label className="text-sm text-gray-600 mb-1 block">Full Name *</label>
                 <input name="shipping_name" required value={form.shipping_name} onChange={handleChange} className={inputCls} placeholder="Rahul Sharma" />
@@ -488,12 +615,51 @@ function CheckoutContent() {
               ))}
             </div>
 
-            <div className="border-t pt-3 space-y-2 text-sm">
+            <div className="border-t pt-3 space-y-3 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span><span>{formatPrice(total)}</span>
               </div>
+
+              {/* Coupon Row */}
+              <div className="py-1">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-green-100 transition-all">
+                    <Tag className="w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      id="checkout-coupon"
+                      autoComplete="off"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      placeholder="Coupon Code"
+                      className="flex-1 text-xs outline-none bg-transparent"
+                      disabled={!!resolvedCouponLabel || applyingCoupon}
+                      aria-label="Coupon code"
+                    />
+                  </div>
+                  {resolvedCouponLabel ? (
+                    <button
+                      type="button"
+                      onClick={() => { setActiveCoupon(""); setResolvedCouponLabel(null); setDiscountPreview(0); setCouponInput(""); }}
+                      className="w-full text-xs font-semibold text-red-500 hover:text-red-600 px-4 py-2.5 bg-red-50 rounded-xl transition-colors"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={applyCoupon}
+                      disabled={applyingCoupon || !couponInput.trim()}
+                      className="w-full bg-green-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-green-700 disabled:opacity-60 transition-all premium-shadow"
+                    >
+                      Apply
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {discountPreview > 0 && (
-                <div className="flex justify-between text-green-600">
+                <div className="flex justify-between text-green-600 font-medium">
                   <span>Discount{couponLabel ? ` (${couponLabel})` : ""}</span>
                   <span>−{formatPrice(discountPreview)}</span>
                 </div>

@@ -118,6 +118,7 @@ model Order {
   razorpayOrderId   String?
   razorpayPaymentId String?
   trackingNumber    String?
+  locationLink      String?
   items             OrderItem[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
@@ -247,6 +248,8 @@ model SettingsPayment {
   paypalEnabled      Boolean  @default(false) @map("paypal_enabled")
   autoRefundEnabled  Boolean  @default(false) @map("auto_refund_enabled")
   razorpayWebhookUrl String?  @map("razorpay_webhook_url")
+  razorpayKeyId      String?  @map("razorpay_key_id")
+  razorpayKeySecret  String?  @map("razorpay_key_secret")
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("settings_payment")
@@ -403,6 +406,10 @@ model SettingsSecurity {
 
   adminTwoFactorEnabled Boolean @default(false) @map("admin_two_factor_enabled")
 
+  googleSignInEnabled Boolean @default(false) @map("google_sign_in_enabled")
+  googleClientId     String?  @map("google_client_id")
+  googleClientSecret String?  @map("google_client_secret")
+
   ipAllowlistEnabled Boolean @default(false) @map("ip_allowlist_enabled")
   ipAllowlistText    String? @map("ip_allowlist_text")
 
@@ -439,4 +446,16 @@ model SettingsAnalytics {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("settings_analytics")
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
 }

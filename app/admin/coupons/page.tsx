@@ -186,245 +186,243 @@ export default function AdminCouponsPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Coupons</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{coupons.length} coupons</p>
+          <h1 className="text-2xl font-bold text-foreground">Promo Coupons</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{coupons.length} active marketing rules</p>
         </div>
         <button type="button" onClick={openCreate}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-colors">
+          className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-primary/20 uppercase tracking-widest">
           <Plus className="w-4 h-4" /> Create Coupon
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-          <h2 className="font-bold text-gray-800 mb-4">{editingId != null ? "Edit coupon" : "New coupon"}</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <form onSubmit={handleSubmit} className="bg-card rounded-3xl border border-card shadow-2xl p-8 mb-10 transition-all animate-in slide-in-from-top duration-300">
+          <h2 className="font-bold text-foreground text-xl mb-8 border-b border-card pb-4">{editingId != null ? "Refine Marketing Rule" : "Forge New Coupon"}</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Coupon Code *</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Coupon Code *</label>
               <input required value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
                 placeholder="e.g. SUMMER20"
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300 font-mono" />
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground font-mono transition-all" />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs text-gray-500 mb-1 block">Description (optional)</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Description (optional)</label>
               <input
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="Shown in cart / offer lists"
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Discount Type</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Discount Type</label>
               <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300">
-                <option value="percent">Percentage (%)</option>
-                <option value="fixed">Fixed Amount (₹)</option>
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all">
+                <option value="percent" className="dark:bg-gray-900">Percentage (%)</option>
+                <option value="fixed" className="dark:bg-gray-900">Fixed Amount (₹)</option>
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Value * ({form.type === "percent" ? "%" : "₹"})</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Value * ({form.type === "percent" ? "%" : "₹"})</label>
               <input required type="number" min="0.01" step="0.01" value={form.value} onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
                 placeholder="20"
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Min Order (₹)</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Min Order (₹)</label>
               <input type="number" min="0" value={form.min_order_amount} onChange={(e) => setForm((f) => ({ ...f, min_order_amount: e.target.value }))}
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Max Discount (₹)</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Max Discount (₹)</label>
               <input type="number" min="0" value={form.max_discount} onChange={(e) => setForm((f) => ({ ...f, max_discount: e.target.value }))}
-                placeholder="Leave blank for no limit"
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                placeholder="No limit"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Usage Limit</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Usage Limit</label>
               <input type="number" min="1" value={form.usage_limit} onChange={(e) => setForm((f) => ({ ...f, usage_limit: e.target.value }))}
-                placeholder="Leave blank for unlimited"
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                placeholder="Unlimited"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Valid From</label>
-              <input type="datetime-local" value={form.valid_from} onChange={(e) => setForm((f) => ({ ...f, valid_from: e.target.value }))}
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
-            </div>
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Valid Until</label>
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Valid Until</label>
               <input type="datetime-local" value={form.valid_until} onChange={(e) => setForm((f) => ({ ...f, valid_until: e.target.value }))}
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300" />
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all" />
             </div>
-            <div className="sm:col-span-2 lg:col-span-3 border-t border-gray-100 pt-4 mt-1">
-              <p className="text-sm font-semibold text-gray-800 mb-2">Who can use this coupon</p>
-              <p className="text-xs text-gray-500 mb-3">
-                Target new vs returning vs tenure. Shoppers only see offers that match their account (and cart still must meet min order).
+            <div className="sm:col-span-2 lg:col-span-3 border-t border-card pt-6 mt-2">
+              <p className="text-sm font-bold text-foreground mb-1 uppercase tracking-wider">Audience Targeting</p>
+              <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                Define who can use this coupon. Shoppers only see offers matching their account history.
               </p>
-              <label className="text-xs text-gray-500 mb-1 block" htmlFor="coupon-audience-segment">
-                Audience
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block" htmlFor="coupon-audience-segment">
+                Segment
               </label>
               <select
                 id="coupon-audience-segment"
                 aria-label="Coupon audience segment"
                 value={form.audience_segment}
                 onChange={(e) => setForm((f) => ({ ...f, audience_segment: e.target.value }))}
-                className="w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300 mb-2"
+                className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all mb-2"
               >
                 {AUDIENCE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
+                  <option key={o.value} value={o.value} className="dark:bg-gray-900">
                     {o.label}
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-gray-400 mb-3">
+              <p className="text-[10px] font-medium text-primary uppercase tracking-widest opacity-80">
                 {AUDIENCE_OPTIONS.find((o) => o.value === form.audience_segment)?.hint}
               </p>
               {form.audience_segment === "mid_user" && (
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Min orders (optional)</label>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Min orders (optional)</label>
                     <input
                       type="number"
                       min={0}
                       value={form.segment_min_orders}
                       onChange={(e) => setForm((f) => ({ ...f, segment_min_orders: e.target.value }))}
                       placeholder="Default 1"
-                      className="w-full border rounded-xl px-3 py-2 text-sm"
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary/20 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-500 mb-1 block">Max orders (optional)</label>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Max orders (optional)</label>
                     <input
                       type="number"
                       min={0}
                       value={form.segment_max_orders}
                       onChange={(e) => setForm((f) => ({ ...f, segment_max_orders: e.target.value }))}
                       placeholder="Default 3"
-                      className="w-full border rounded-xl px-3 py-2 text-sm"
+                      className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2 text-sm text-foreground focus:ring-2 focus:ring-primary/20 outline-none"
                     />
                   </div>
                 </div>
               )}
               {form.audience_segment === "old_user" && (
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Min lifetime orders (optional)</label>
+                <div className="mt-4">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Min lifetime orders (optional)</label>
                   <input
                     type="number"
                     min={0}
                     value={form.segment_loyal_min_orders}
                     onChange={(e) => setForm((f) => ({ ...f, segment_loyal_min_orders: e.target.value }))}
                     placeholder="Default 4"
-                    className="w-full border rounded-xl px-3 py-2 text-sm max-w-xs"
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2 text-sm max-w-xs text-foreground focus:ring-2 focus:ring-primary/20 outline-none"
                   />
                 </div>
               )}
               {form.audience_segment === "account_under_days" && (
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Max account age (days)</label>
+                <div className="mt-4">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Max account age (days)</label>
                   <input
                     type="number"
                     min={0}
                     value={form.segment_max_account_age_days}
                     onChange={(e) => setForm((f) => ({ ...f, segment_max_account_age_days: e.target.value }))}
                     placeholder="Default 30"
-                    className="w-full border rounded-xl px-3 py-2 text-sm max-w-xs"
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2 text-sm max-w-xs text-foreground focus:ring-2 focus:ring-primary/20 outline-none"
                   />
                 </div>
               )}
               {form.audience_segment === "account_over_days" && (
-                <div>
-                  <label className="text-xs text-gray-500 mb-1 block">Min account age (days)</label>
+                <div className="mt-4">
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Min account age (days)</label>
                   <input
                     type="number"
                     min={0}
                     value={form.segment_min_account_age_days}
                     onChange={(e) => setForm((f) => ({ ...f, segment_min_account_age_days: e.target.value }))}
                     placeholder="Default 90"
-                    className="w-full border rounded-xl px-3 py-2 text-sm max-w-xs"
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2 text-sm max-w-xs text-foreground focus:ring-2 focus:ring-primary/20 outline-none"
                   />
                 </div>
               )}
             </div>
-            <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-2 pt-2">
+            <div className="sm:col-span-2 lg:col-span-3 flex items-center gap-3 pt-4 border-t border-card mt-2">
               <input
                 type="checkbox"
                 id="coupon-is-active"
                 checked={form.is_active}
                 onChange={(e) => setForm((f) => ({ ...f, is_active: e.target.checked }))}
-                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                className="w-5 h-5 rounded border-card bg-gray-50 dark:bg-gray-800 text-primary focus:ring-primary/20"
               />
-              <label htmlFor="coupon-is-active" className="text-sm text-gray-800 cursor-pointer">
-                Coupon is active (customers can use it)
+              <label htmlFor="coupon-is-active" className="text-sm font-bold text-gray-500 hover:text-foreground cursor-pointer transition-colors">
+                Coupon is Active <span className="text-[10px] uppercase opacity-40 font-normal tracking-wide">(customers can use this item)</span>
               </label>
             </div>
           </div>
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-4 mt-10 pt-8 border-t border-card">
             <button type="submit" disabled={saving}
-              className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-5 py-2 rounded-xl text-sm font-semibold transition-colors">
-              {saving ? (editingId != null ? "Saving…" : "Creating…") : editingId != null ? "Save changes" : "Create coupon"}
+              className="bg-primary hover:bg-primary-hover disabled:opacity-60 text-white px-10 py-3 rounded-xl text-xs font-bold transition-all shadow-lg shadow-primary/20 uppercase tracking-widest">
+              {saving ? "Processing…" : editingId != null ? "Update Coupon" : "Activate Coupon"}
             </button>
-            <button type="button" onClick={closeForm} className="text-gray-500 text-sm px-4">Cancel</button>
+            <button type="button" onClick={closeForm} className="text-gray-500 hover:text-foreground text-[10px] font-bold uppercase tracking-widest px-4 transition-colors">Cancel</button>
           </div>
         </form>
       )}
 
       {loading ? (
-        <div className="space-y-2">{[1, 2, 3].map((i) => <div key={i} className="bg-white rounded-2xl h-14 animate-pulse border" />)}</div>
+        <div className="space-y-4">{[1, 2, 3].map((i) => <div key={i} className="bg-card rounded-2xl h-16 animate-pulse border border-card" />)}</div>
       ) : coupons.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-10 text-center text-gray-400">
-          <Tag className="w-10 h-10 mx-auto mb-2 opacity-25" />
-          <p>No coupons yet. Create your first coupon above.</p>
+        <div className="bg-card rounded-3xl border border-card shadow-sm p-24 text-center">
+          <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-card shadow-inner">
+            <Tag className="w-10 h-10 text-gray-300 dark:text-gray-700" />
+          </div>
+          <p className="text-lg font-bold text-foreground mb-1">No promo rules established</p>
+          <p className="text-sm text-gray-400 italic">Start scaling your business by creating your first discount coupon.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-card rounded-3xl border border-card shadow-sm overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-card">
               <tr>
                 {["Code", "Type", "Value", "Audience", "Min Order", "Used", "Expires", "Status", "Actions"].map((h) => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-400 uppercase tracking-widest">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-card">
               {coupons.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded">{c.code}</span>
+                <tr key={c.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg border border-primary/10 tracking-tight">{c.code}</span>
                       <button
                         type="button"
                         title="Copy code"
                         onClick={() => { navigator.clipboard.writeText(c.code); toast.success("Copied!"); }}
-                        className="text-gray-400 hover:text-gray-600"
+                        className="text-gray-400 hover:text-primary transition-colors"
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-3 capitalize text-gray-600">{c.type}</td>
-                  <td className="px-4 py-3 font-semibold">{c.type === "percent" ? `${c.value}%` : formatPrice(c.value)}</td>
-                  <td className="px-4 py-3 text-xs text-gray-600 max-w-[140px]">
-                    <span className="font-mono text-[11px] bg-gray-100 px-1.5 py-0.5 rounded">
+                  <td className="px-4 py-4 capitalize text-gray-500 font-medium">{c.type}</td>
+                  <td className="px-4 py-4 font-bold text-foreground">{c.type === "percent" ? `${c.value}%` : formatPrice(c.value)}</td>
+                  <td className="px-4 py-4">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-widest bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-lg border border-card shadow-sm">
                       {c.audience_segment ?? "all"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{formatPrice(c.min_order_amount)}</td>
-                  <td className="px-4 py-3 text-gray-600">{c.used_count}{c.usage_limit ? `/${c.usage_limit}` : ""}</td>
-                  <td className="px-4 py-3 text-xs text-gray-500">
+                  <td className="px-4 py-4 text-gray-500">{formatPrice(c.min_order_amount)}</td>
+                  <td className="px-4 py-4 font-semibold text-foreground text-xs">{c.used_count}<span className="opacity-40 font-normal"> / {c.usage_limit || "∞"}</span></td>
+                  <td className="px-4 py-4 text-[11px] text-gray-500 font-medium">
                     {c.valid_until ? new Date(c.valid_until).toLocaleDateString("en-IN") : "No expiry"}
                   </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                  <td className="px-4 py-4">
+                    <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-widest border border-opacity-10 transition-all ${c.is_active ? "bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 border-green-200" : "bg-gray-100 dark:bg-gray-500/20 text-gray-500 dark:text-gray-400 border-gray-200"}`}>
                       {c.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
                         title="Edit coupon"
                         onClick={() => openEdit(c)}
-                        className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="p-2 rounded-xl text-primary hover:bg-primary/10 transition-all shadow-sm border border-transparent hover:border-primary/20"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
@@ -432,7 +430,7 @@ export default function AdminCouponsPage() {
                         type="button"
                         title="Delete coupon"
                         onClick={() => void handleDelete(c)}
-                        className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                        className="p-2 rounded-xl text-red-500 hover:bg-red-500/10 transition-all shadow-sm border border-transparent hover:border-red-500/20"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

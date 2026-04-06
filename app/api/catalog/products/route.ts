@@ -24,10 +24,23 @@ export async function GET(req: NextRequest) {
       ];
     }
 
+    const sort = searchParams.get("sort") || "";
+
+    const orderBy: Prisma.ProductOrderByWithRelationInput = {};
+    if (sort === "price_asc") {
+      orderBy.price = "asc";
+    } else if (sort === "price_desc") {
+      orderBy.price = "desc";
+    } else if (sort === "name_asc") {
+      orderBy.name = "asc";
+    } else {
+      orderBy.id = "asc";
+    }
+
     const products = await prisma.product.findMany({
       where,
       include: { category: true },
-      orderBy: { id: "asc" },
+      orderBy,
     });
 
     return jsonOk({ products: products.map((p) => mapProduct(p, { admin })) });

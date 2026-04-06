@@ -6,7 +6,7 @@ import { getMaintenanceMode, getCouponDefaults } from "@/lib/server/settings";
 
 /** Public storefront config (no secrets) */
 export async function GET() {
-  const [g, p, s, ui, an, couponDef, inv] = await Promise.all([
+  const [g, p, s, ui, an, couponDef, inv, sec] = await Promise.all([
     prisma.settingsGeneral.findUnique({ where: { id: 1 } }).catch(() => null),
     prisma.settingsPayment.findUnique({ where: { id: 1 } }).catch(() => null),
     prisma.settingsShipping.findUnique({ where: { id: 1 } }).catch(() => null),
@@ -14,6 +14,7 @@ export async function GET() {
     prisma.settingsAnalytics.findUnique({ where: { id: 1 } }).catch(() => null),
     getCouponDefaults().catch(() => null),
     prisma.settingsInvoiceTax.findUnique({ where: { id: 1 } }).catch(() => null),
+    prisma.settingsSecurity.findUnique({ where: { id: 1 } }).catch(() => null),
   ]);
 
   const gaId = normalizeGoogleAnalyticsId(an?.googleAnalyticsId ?? "");
@@ -33,8 +34,13 @@ export async function GET() {
       currency: p?.currency ?? "INR",
       cod_enabled: p?.codEnabled ?? true,
       razorpay_enabled: p?.razorpayEnabled ?? true,
+      razorpay_key_id: p?.razorpayKeyId ?? null,
       stripe_enabled: p?.stripeEnabled ?? false,
       paypal_enabled: p?.paypalEnabled ?? false,
+    },
+    auth: {
+      google_sign_in_enabled: sec?.googleSignInEnabled ?? false,
+      google_client_id: sec?.googleClientId ?? null,
     },
     shipping: {
       flat_rate: s?.flatRate ?? 50,

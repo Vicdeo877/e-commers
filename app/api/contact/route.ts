@@ -11,9 +11,14 @@ export async function POST(req: Request) {
       return jsonErr("Name, email and message are required", 400);
     }
 
+    // Save the message to the database first!
+    const savedMessage = await prisma.contactMessage.create({
+      data: { name, email, subject, message, isRead: false }
+    });
+
     // Get the administrative email from General Settings
-    const settings = await prisma.settingsGeneral.findUnique({ where: { id: 1 } });
-    const adminEmail = settings?.email || "admin@blissfruitz.com";
+    const settings = await prisma.settingsGeneral.findFirst();
+    const adminEmail = settings?.email || "admin@blissfruits.com";
 
     // Attempt to send an email using the SMTP service
     const emailResult = await sendEmail({
@@ -25,22 +30,22 @@ export async function POST(req: Request) {
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Subject:</strong> ${subject || "N/A"}</p>
         <p><strong>Message:</strong></p>
-        <div style="padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px;">
+        <div style="padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; color: #333;">
           ${message.replace(/\n/g, "<br>")}
         </div>
       `,
       text: `New Message from ${name} (${email})\nSubject: ${subject || "N/A"}\n\nMessage:\n${message}`,
     });
 
-    console.log(`[Contact Form] Email send result:`, emailResult);
+    console.log(`[Contact Form] Email processing result:`, emailResult);
     
     return jsonOk({ 
-      message: emailResult.success 
+      message: (emailResult as any).success 
         ? "Thank you for your message. We have received it and will get back to you soon." 
-        : "Message logged, but email delivery was skipped (SMTP disabled)." 
+        : "Thank you for your message. Our team has been notified (Simulation Mode)." 
     });
   } catch (e) {
     console.error("Contact form error:", e);
-    return jsonErr("Failed to send message", 500);
+    return jsonErr("Internal technical error. Please try again later or contact us directly.", 500);
   }
 }

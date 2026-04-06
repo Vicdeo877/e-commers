@@ -159,6 +159,12 @@ export const adminGetStats = () =>
 export const adminGetSettings = () =>
   api.get("/admin/settings").then((r) => r.data?.data ?? null);
 
+export const adminGetMessages = (page = 1) =>
+  api.get("/admin/messages", { params: { page: String(page) } }).then((r) => r.data?.data ?? { messages: [], pagination: {} });
+
+export const adminMarkMessageRead = (id: number) =>
+  api.post("/admin/message_read", { id }).then((r) => r.data);
+
 export const adminUpdateSettings = (data: {
   general?: Record<string, unknown>;
   payment?: Record<string, unknown>;

@@ -24,8 +24,13 @@ export type PublicSiteSettings = {
     currency: string;
     cod_enabled: boolean;
     razorpay_enabled: boolean;
+    razorpay_key_id: string | null;
     stripe_enabled: boolean;
     paypal_enabled: boolean;
+  };
+  auth: {
+    google_sign_in_enabled: boolean;
+    google_client_id: string | null;
   };
   shipping: {
     flat_rate: number;

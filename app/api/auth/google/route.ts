@@ -5,6 +5,7 @@ import {
   OAUTH_STATE_COOKIE,
 } from "@/lib/server/google-oauth";
 import { publicOriginFromRequest, safeNextPath } from "@/lib/server/app-origin";
+import { prisma } from "@/lib/prisma";
 
 const cookieOpts = {
   httpOnly: true,
@@ -21,10 +22,15 @@ const cookieOpts = {
 export async function GET(req: Request) {
   try {
     const requestOrigin = publicOriginFromRequest(req);
-    const hasClient =
-      Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) &&
-      Boolean(process.env.GOOGLE_CLIENT_SECRET);
-    if (!hasClient) {
+    
+    // Check DB first for enablement and credentials
+    const sec = await prisma.settingsSecurity.findFirst();
+    const enabled = sec?.googleSignInEnabled ?? Boolean(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID);
+    const hasClient = 
+      (sec?.googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID) &&
+      (sec?.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET);
+
+    if (!enabled || !hasClient) {
       const ref = req.headers.get("referer") ?? "";
       let path = "/login";
       try {
@@ -42,7 +48,7 @@ export async function GET(req: Request) {
     const next = safeNextPath(searchParams.get("next"));
     const state = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
 
-    const url = buildGoogleAuthUrl(state, requestOrigin);
+    const url = await buildGoogleAuthUrl(state, requestOrigin);
     const res = NextResponse.redirect(url);
     res.cookies.set(OAUTH_STATE_COOKIE, state, cookieOpts);
     res.cookies.set(OAUTH_NEXT_COOKIE, next, cookieOpts);

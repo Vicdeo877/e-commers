@@ -188,65 +188,98 @@ export default function CartPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Your Cart</h1>
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-3 gap-10">
         {/* Items */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-6">
           {items.map((item) => (
-              <div key={item.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 relative bg-gray-100">
+            <div key={item.id} className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex gap-4 items-center">
+                {/* Image */}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 relative bg-gray-50 border border-gray-50">
                   {item.image_main ? (
                     <AppImage
                       src={imgUrl(item.image_main)}
                       alt={item.name}
-                      width={64}
-                      height={64}
+                      width={96}
+                      height={96}
                       className="object-cover w-full h-full"
                       placeholderName={item.name}
                       placeholderType="product"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-green-300 to-emerald-500 flex items-center justify-center text-white font-bold text-xl">
+                    <div className="w-full h-full bg-gradient-to-br from-green-300 to-emerald-500 flex items-center justify-center text-white font-bold text-2xl">
                       {item.name?.[0]?.toUpperCase() ?? "F"}
                     </div>
                   )}
                 </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-800 line-clamp-1">{item.name}</p>
-                <p className="text-green-600 font-bold">{formatPrice(item.price)}</p>
-              </div>
-              <div className="flex items-center gap-2">
+
+                {/* Details Wrapper */}
+                <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-gray-900 text-base sm:text-lg line-clamp-1">{item.name}</p>
+                    <p className="text-green-600 font-semibold text-sm sm:text-base">{formatPrice(item.price)}</p>
+                  </div>
+
+                  {/* Desktop Price Total */}
+                  <div className="hidden sm:block text-right min-w-[100px]">
+                    <p className="text-sm text-gray-400 mb-1">Total</p>
+                    <p className="font-bold text-gray-900 text-lg">{formatPrice(Number(item.price) * item.quantity)}</p>
+                  </div>
+                </div>
+
+                {/* Mobile Trash */}
                 <button
                   type="button"
-                  aria-label="Decrease quantity"
-                  onClick={() => update(item.product_id, item.quantity - 1)}
-                  disabled={loading || item.quantity <= 1}
-                  className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
-                >
-                  <Minus className="w-3 h-3" />
-                </button>
-                <span className="w-8 text-center font-semibold">{item.quantity}</span>
-                <button
-                  type="button"
-                  aria-label="Increase quantity"
-                  onClick={() => update(item.product_id, item.quantity + 1)}
+                  aria-label={`Remove ${item.name} from cart`}
+                  onClick={() => remove(item.product_id)}
                   disabled={loading}
-                  className="w-8 h-8 rounded-full border flex items-center justify-center hover:bg-gray-100 disabled:opacity-40"
+                  className="sm:hidden text-red-400 hover:text-red-600 disabled:opacity-40 p-2 rounded-xl hover:bg-red-50 transition-colors"
                 >
-                  <Plus className="w-3 h-3" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
-              <div className="text-right min-w-[70px]">
-                <p className="font-bold text-gray-900">{formatPrice(Number(item.price) * item.quantity)}</p>
+
+              {/* Bottom Row (Actions) */}
+              <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between sm:justify-end gap-6">
+                <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-1 px-2 border border-gray-100">
+                  <button
+                    type="button"
+                    aria-label="Decrease quantity"
+                    onClick={() => update(item.product_id, item.quantity - 1)}
+                    disabled={loading || item.quantity <= 1}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white hover:shadow-sm disabled:opacity-30 transition-all"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="w-6 text-center font-bold text-gray-800 text-sm">{item.quantity}</span>
+                  <button
+                    type="button"
+                    aria-label="Increase quantity"
+                    onClick={() => update(item.product_id, item.quantity + 1)}
+                    disabled={loading}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white hover:shadow-sm disabled:opacity-30 transition-all"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="sm:hidden text-right">
+                    <p className="font-bold text-gray-900">{formatPrice(Number(item.price) * item.quantity)}</p>
+                  </div>
+                  
+                  {/* Desktop Trash */}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${item.name} from cart`}
+                    onClick={() => remove(item.product_id)}
+                    disabled={loading}
+                    className="hidden sm:flex text-red-400 hover:text-red-600 disabled:opacity-40 p-2 rounded-xl hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
-              <button
-                type="button"
-                aria-label={`Remove ${item.name} from cart`}
-                onClick={() => remove(item.product_id)}
-                disabled={loading}
-                className="text-red-400 hover:text-red-600 disabled:opacity-40 ml-1 p-1 rounded-lg hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
             </div>
           ))}
         </div>
@@ -296,40 +329,40 @@ export default function CartPage() {
               )}
 
               {applyMode === "code_only" && (
-              <div className="flex gap-2">
-                <div className="flex-1 flex items-center gap-2 border rounded-xl px-3 py-2">
-                  <Tag className="w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    id="cart-coupon"
-                    autoComplete="off"
-                    value={coupon}
-                    onChange={(e) => setCoupon(e.target.value.toUpperCase())}
-                    placeholder="Coupon code"
-                    className="flex-1 text-sm outline-none"
-                    disabled={!!couponApplied}
-                    aria-label="Coupon code"
-                  />
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50 focus-within:bg-white focus-within:ring-2 focus-within:ring-green-100 transition-all">
+                    <Tag className="w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      id="cart-coupon"
+                      autoComplete="off"
+                      value={coupon}
+                      onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+                      placeholder="Coupon code"
+                      className="flex-1 text-sm outline-none bg-transparent"
+                      disabled={!!couponApplied}
+                      aria-label="Coupon code"
+                    />
+                  </div>
+                  {couponApplied ? (
+                    <button
+                      type="button"
+                      onClick={() => { setCouponApplied(""); setDiscount(0); setCoupon(""); }}
+                      className="w-full text-sm font-semibold text-red-500 hover:text-red-600 px-4 py-2.5 bg-red-50 rounded-xl transition-colors"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void applyCoupon()}
+                      disabled={applyingCoupon || !coupon.trim()}
+                      className="w-full bg-green-600 text-white text-sm font-bold px-6 py-2.5 rounded-xl hover:bg-green-700 disabled:opacity-60 transition-all premium-shadow"
+                    >
+                      Apply
+                    </button>
+                  )}
                 </div>
-                {couponApplied ? (
-                  <button
-                    type="button"
-                    onClick={() => { setCouponApplied(""); setDiscount(0); setCoupon(""); }}
-                    className="text-sm text-red-500 hover:underline"
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => void applyCoupon()}
-                    disabled={applyingCoupon}
-                    className="bg-green-600 text-white text-sm px-4 py-2 rounded-xl hover:bg-green-700 disabled:opacity-60 transition-colors"
-                  >
-                    Apply
-                  </button>
-                )}
-              </div>
               )}
 
               {applyMode === "auto" && couponApplied && discount > 0 && (

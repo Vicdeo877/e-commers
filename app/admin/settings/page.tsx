@@ -86,6 +86,10 @@ export default function AdminSettingsPage() {
     paypal_enabled: false,
     auto_refund_enabled: false,
     razorpay_webhook_url: "",
+    razorpay_key_id: "",
+    razorpay_key_secret: "",
+    razorpay_key_secret_set: false,
+    clear_razorpay_key_secret: false,
   });
   const [shipping, setShipping] = useState({
     flat_rate: 50,
@@ -199,6 +203,11 @@ export default function AdminSettingsPage() {
     session_timeout_minutes: 10080,
     audit_log_enabled: false,
     audit_log_retention_days: 90,
+    google_sign_in_enabled: false,
+    google_client_id: "",
+    google_client_secret: "",
+    google_client_secret_set: false,
+    clear_google_client_secret: false,
   });
   const [analyticsSettings, setAnalyticsSettings] = useState({
     google_analytics_id: "",
@@ -221,7 +230,12 @@ export default function AdminSettingsPage() {
       .then((d) => {
         if (!d) return;
         if (d.general) setGeneral((g) => ({ ...g, ...d.general }));
-        if (d.payment) setPayment((p) => ({ ...p, ...d.payment }));
+        if (d.payment) setPayment((p) => ({ 
+          ...p, 
+          ...d.payment,
+          razorpay_key_secret: "",
+          clear_razorpay_key_secret: false
+        }));
         if (d.shipping) setShipping((s) => ({ ...s, ...d.shipping }));
         if (d.product_catalog && typeof d.product_catalog === "object") {
           const pc = d.product_catalog as Record<string, unknown>;
@@ -394,6 +408,11 @@ export default function AdminSettingsPage() {
               3650,
               Math.max(1, Number(s.audit_log_retention_days) || 90)
             ),
+            google_sign_in_enabled: Boolean(s.google_sign_in_enabled),
+            google_client_id: String(s.google_client_id ?? ""),
+            google_client_secret: "",
+            google_client_secret_set: Boolean(s.google_client_secret_set),
+            clear_google_client_secret: false,
           });
         }
         if (d.analytics && typeof d.analytics === "object") {
@@ -440,7 +459,13 @@ export default function AdminSettingsPage() {
     try {
       await adminUpdateSettings({
         ...(part === "general" ? { general } : {}),
-        ...(part === "payment" ? { payment } : {}),
+        ...(part === "payment" ? { 
+          payment: {
+            ...payment,
+            ...(payment.razorpay_key_secret.trim() ? { razorpay_key_secret: payment.razorpay_key_secret.trim() } : {}),
+            ...(payment.clear_razorpay_key_secret ? { clear_razorpay_key_secret: true } : {}),
+          } 
+        } : {}),
         ...(part === "shipping" ? { shipping } : {}),
         ...(part === "product_catalog" ? { product_catalog: productCatalog } : {}),
         ...(part === "backup" ? { backup } : {}),
@@ -554,6 +579,10 @@ export default function AdminSettingsPage() {
                 session_timeout_minutes: securitySettings.session_timeout_minutes,
                 audit_log_enabled: securitySettings.audit_log_enabled,
                 audit_log_retention_days: securitySettings.audit_log_retention_days,
+                google_sign_in_enabled: securitySettings.google_sign_in_enabled,
+                google_client_id: securitySettings.google_client_id,
+                ...(securitySettings.google_client_secret.trim() ? { google_client_secret: securitySettings.google_client_secret.trim() } : {}),
+                ...(securitySettings.clear_google_client_secret ? { clear_google_client_secret: true } : {}),
               },
             }
           : {}),
@@ -570,7 +599,23 @@ export default function AdminSettingsPage() {
           : {}),
       });
       toast.success("Settings saved");
-      if (part === "email_notifications") {
+      if (part === "payment") {
+        setPayment(p => ({
+          ...p,
+          razorpay_key_secret: "",
+          clear_razorpay_key_secret: false,
+          razorpay_key_secret_set: p.razorpay_key_secret.trim() ? true : (p.clear_razorpay_key_secret ? false : p.razorpay_key_secret_set)
+        }));
+      }
+      if (part === "security") {
+        setSecuritySettings(s => ({
+          ...s,
+          google_client_secret: "",
+          clear_google_client_secret: false,
+          google_client_secret_set: s.google_client_secret.trim() ? true : (s.clear_google_client_secret ? false : s.google_client_secret_set)
+        }));
+      }
+      if (part === "email") {
         setEmailNotifications((e) => {
           const next = {
             ...e,
@@ -623,8 +668,8 @@ export default function AdminSettingsPage() {
     }
   };
 
-  const input = "w-full border rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300";
-  const label = "text-xs text-gray-500 mb-1 block font-medium";
+  const input = "w-full bg-gray-50 dark:bg-gray-800 border border-card rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 text-foreground transition-all";
+  const label = "text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block";
 
   if (loading) {
     return (
@@ -638,9 +683,9 @@ export default function AdminSettingsPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-8 max-w-6xl">
       <aside className="lg:w-56 shrink-0">
-        <div className="flex items-center gap-2 mb-4">
-          <Settings className="w-6 h-6 text-green-600" />
-          <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+        <div className="flex items-center gap-3 mb-6">
+          <Settings className="w-6 h-6 text-primary" />
+          <h1 className="text-xl font-bold text-foreground">Settings</h1>
         </div>
         <nav className="space-y-0.5">
           {NAV.map((item) => (
@@ -649,8 +694,8 @@ export default function AdminSettingsPage() {
               type="button"
               onClick={() => setSection(item.id)}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-left transition-colors",
-                section === item.id ? "bg-green-600 text-white" : "text-gray-600 hover:bg-gray-100"
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest text-left transition-all",
+                section === item.id ? "bg-primary text-white shadow-lg shadow-primary/20" : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
               )}
             >
               <item.icon className="w-4 h-4 shrink-0" />
@@ -662,8 +707,8 @@ export default function AdminSettingsPage() {
 
       <div className="flex-1 min-w-0 space-y-6">
         {section === "general" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">General</h2>
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8">
+            <h2 className="text-xl font-bold text-foreground mb-8">General Configuration</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <label className={label} htmlFor="settings-general-site-name">
@@ -748,11 +793,11 @@ export default function AdminSettingsPage() {
                 </select>
               </div>
               <div>
-                <span className={label}>Logo</span>
-                {general.logo ? <p className="text-xs text-gray-500 mb-1 truncate">{general.logo}</p> : null}
-                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-50 text-sm">
+                <span className={label}>Branding Assets</span>
+                {general.logo ? <p className="text-[10px] text-gray-400 mb-2 truncate italic opacity-60">{general.logo}</p> : null}
+                <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-card bg-gray-50 dark:bg-gray-800/50 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 text-xs font-bold uppercase tracking-widest text-gray-500 transition-all">
                   <Upload className="w-4 h-4" aria-hidden />
-                  Upload logo
+                  Upload site logo
                   <input
                     id="settings-general-logo-file"
                     type="file"
@@ -789,12 +834,11 @@ export default function AdminSettingsPage() {
         )}
 
         {section === "payment" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">Payment gateways</h2>
             <p className="text-sm text-gray-500">
-              Razorpay API keys stay in <code className="bg-gray-100 px-1 rounded">.env</code> (
-              <code className="bg-gray-100 px-1">NEXT_PUBLIC_RAZORPAY_KEY_ID</code>,{" "}
-              <code className="bg-gray-100 px-1">RAZORPAY_KEY_SECRET</code>). Toggle which methods customers see at checkout.
+              Configure your payment gateway credentials below. Tokens are stored securely and never exposed in the UI. 
+              <br/><span className="text-xs text-amber-600">Note: Database settings will override .env values.</span>
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
@@ -811,6 +855,46 @@ export default function AdminSettingsPage() {
                   <option value="USD">USD ($)</option>
                   <option value="EUR">EUR (€)</option>
                 </select>
+              </div>
+
+              <div className="sm:col-span-2 border-y border-gray-100 py-4 my-2">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">Razorpay Configuration</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className={label} htmlFor="razorpay_key_id">Razorpay Key ID</label>
+                    <input
+                      id="razorpay_key_id"
+                      className={input}
+                      placeholder="rzp_test_..."
+                      value={payment.razorpay_key_id}
+                      onChange={(e) => setPayment(p => ({ ...p, razorpay_key_id: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className={label} htmlFor="razorpay_key_secret">
+                      Razorpay Key Secret {payment.razorpay_key_secret_set && <span className="text-green-600 font-normal">(Already set)</span>}
+                    </label>
+                    <input
+                      id="razorpay_key_secret"
+                      type="password"
+                      autoComplete="off"
+                      className={input}
+                      placeholder={payment.razorpay_key_secret_set ? "••••••••••••••••" : "Paste your secret here"}
+                      value={payment.razorpay_key_secret}
+                      onChange={(e) => setPayment(p => ({ ...p, razorpay_key_secret: e.target.value, clear_razorpay_key_secret: false }))}
+                    />
+                    {payment.razorpay_key_secret_set && (
+                      <label className="flex items-center gap-2 mt-2 text-xs text-red-600 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={payment.clear_razorpay_key_secret}
+                          onChange={(e) => setPayment(p => ({ ...p, clear_razorpay_key_secret: e.target.checked, razorpay_key_secret: "" }))}
+                        />
+                        Clear existing secret
+                      </label>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="sm:col-span-2 space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -854,7 +938,7 @@ export default function AdminSettingsPage() {
         )}
 
         {section === "shipping" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">Shipping & delivery</h2>
             <p className="text-sm text-gray-500">
               Flat rate and free-shipping threshold are used by checkout and cart estimates. Express ETA is shown to customers as text.
@@ -910,7 +994,7 @@ export default function AdminSettingsPage() {
         )}
 
         {section === "email" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-8">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-8">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Email &amp; notifications</h2>
               <p className="text-sm text-gray-500 mt-1">
@@ -1368,13 +1452,64 @@ export default function AdminSettingsPage() {
           </div>
         )}
         {section === "security" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-8">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-8">
             <div>
               <h2 className="text-lg font-bold text-gray-900">Security</h2>
               <p className="text-sm text-gray-500 mt-1">
-                Store policy here for when login, sessions, and auditing are wired to these values. Changing options alone does not
-                enable 2FA, IP filtering, or lockout until the auth layer uses them.
+                Store policy here for when login, sessions, and auditing are wired to these values. 
+                <br/><span className="text-xs text-amber-600 font-medium">Authentication secrets (Google) are managed here and will override .env values.</span>
               </p>
+            </div>
+
+            <div className="border-t border-gray-100 pt-6 space-y-4">
+              <h3 className="text-sm font-semibold text-gray-800">Google OAuth (Sign-in)</h3>
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={securitySettings.google_sign_in_enabled}
+                  onChange={(e) =>
+                    setSecuritySettings((x) => ({ ...x, google_sign_in_enabled: e.target.checked }))
+                  }
+                  className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                />
+                <span className="text-sm text-gray-800">Enable Google Sign-in on storefront</span>
+              </label>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className={label} htmlFor="google_client_id">Google Client ID</label>
+                  <input
+                    id="google_client_id"
+                    className={input}
+                    placeholder="94xxxx-xxxx.apps.googleusercontent.com"
+                    value={securitySettings.google_client_id}
+                    onChange={(e) => setSecuritySettings(s => ({ ...s, google_client_id: e.target.value }))}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={label} htmlFor="google_client_secret">
+                    Google Client Secret {securitySettings.google_client_secret_set && <span className="text-green-600 font-normal">(Already set)</span>}
+                  </label>
+                  <input
+                    id="google_client_secret"
+                    type="password"
+                    autoComplete="off"
+                    className={input}
+                    placeholder={securitySettings.google_client_secret_set ? "••••••••••••••••" : "Paste your secret here"}
+                    value={securitySettings.google_client_secret}
+                    onChange={(e) => setSecuritySettings(s => ({ ...s, google_client_secret: e.target.value, clear_google_client_secret: false }))}
+                  />
+                  {securitySettings.google_client_secret_set && (
+                    <label className="flex items-center gap-2 mt-2 text-xs text-red-600 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={securitySettings.clear_google_client_secret}
+                        onChange={(e) => setSecuritySettings(s => ({ ...s, clear_google_client_secret: e.target.checked, google_client_secret: "" }))}
+                      />
+                      Clear existing secret
+                    </label>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="border-t border-gray-100 pt-6 space-y-3">
@@ -1602,134 +1737,184 @@ export default function AdminSettingsPage() {
               type="button"
               disabled={saving}
               onClick={() => save("security")}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+              className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 transition-colors"
             >
               {saving ? "Saving…" : "Save security"}
             </button>
           </div>
         )}
         {section === "ui" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-            <h2 className="text-lg font-bold text-gray-900">UI / theme</h2>
-            <p className="text-sm text-gray-500">
-              Controls the public storefront: colour mode, accent colour, content width, and optional custom CSS or JavaScript.
-              Visitors may need to refresh the page to pick up changes.
-            </p>
-            <div className="grid sm:grid-cols-2 gap-4">
+          <>
+            <div className="bg-card rounded-2xl border border-card shadow-sm p-6 space-y-8">
               <div>
-                <label className={label} htmlFor="ui-theme-mode">
-                  Colour mode
-                </label>
-                <select
-                  id="ui-theme-mode"
-                  className={input}
-                  value={uiTheme.theme_mode}
-                  onChange={(e) =>
-                    setUiTheme((t) => ({
-                      ...t,
-                      theme_mode: e.target.value as "light" | "dark" | "system",
-                    }))
-                  }
-                >
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="system">System (follow device)</option>
-                </select>
+                <h2 className="text-lg font-bold text-foreground">UI / theme</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Controls the public storefront: colour mode, accent colour, content width, and optional custom CSS or JavaScript.
+                  Visitors may need to refresh the page to pick up changes.
+                </p>
               </div>
-              <div>
-                <label className={label} htmlFor="ui-layout-preset">
-                  Layout
-                </label>
-                <select
-                  id="ui-layout-preset"
-                  className={input}
-                  value={uiTheme.layout_preset}
-                  onChange={(e) =>
-                    setUiTheme((t) => ({
-                      ...t,
-                      layout_preset: e.target.value as "default" | "compact" | "wide",
-                    }))
-                  }
-                >
-                  <option value="default">Default</option>
-                  <option value="compact">Compact (narrower content)</option>
-                  <option value="wide">Wide (more horizontal space)</option>
-                </select>
-              </div>
-              <div className="sm:col-span-2">
-                <label className={label} htmlFor="ui-primary-color">
-                  Primary colour
-                </label>
-                <div className="flex flex-wrap items-center gap-3">
-                  <input
-                    id="ui-primary-color"
-                    type="color"
-                    className="h-10 w-14 cursor-pointer rounded-lg border border-gray-200 bg-white p-1"
-                    value={
-                      /^#[0-9A-Fa-f]{6}$/.test(uiTheme.primary_color.trim())
-                        ? uiTheme.primary_color.trim()
-                        : "#16a34a"
-                    }
-                    onChange={(e) => setUiTheme((t) => ({ ...t, primary_color: e.target.value }))}
-                  />
-                  <input
-                    type="text"
-                    className={`${input} flex-1 min-w-[140px]`}
-                    value={uiTheme.primary_color}
-                    onChange={(e) => setUiTheme((t) => ({ ...t, primary_color: e.target.value }))}
-                    placeholder="#16a34a"
-                    spellCheck={false}
-                  />
+
+              {/* ── Theme Presets ── */}
+              <div className="space-y-4 pt-2">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Theme Presets & Templates</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { id: "emerald", name: "Emerald Forest", color: "#16a34a", mode: "light", layout: "default" },
+                    { id: "ocean", name: "Midnight Ocean", color: "#0891b2", mode: "dark", layout: "wide" },
+                    { id: "rose", name: "Midnight Rose", color: "#e11d48", mode: "dark", layout: "default" },
+                    { id: "slate", name: "Minimal Slate", color: "#475569", mode: "light", layout: "compact" },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setUiTheme((t) => ({
+                          ...t,
+                          primary_color: p.color,
+                          theme_mode: p.mode as any,
+                          layout_preset: p.layout as any,
+                        }));
+                        toast.success(`Theme ${p.name} selected`);
+                      }}
+                      className={cn(
+                        "group flex flex-col items-center gap-2.5 p-3 rounded-2xl border transition-all text-center",
+                        uiTheme.primary_color === p.color && uiTheme.theme_mode === p.mode
+                          ? "border-primary bg-primary/5 ring-1 ring-primary"
+                          : "border-card bg-gray-50/50 dark:bg-gray-800/30 hover:border-gray-300 dark:hover:border-gray-600"
+                      )}
+                    >
+                      <div 
+                        className="w-10 h-10 rounded-full shadow-inner border-2 border-white dark:border-gray-800" 
+                        style={{ backgroundColor: p.color }} 
+                      />
+                      <div className="space-y-0.5">
+                        <p className="text-[11px] font-bold text-foreground truncate">{p.name}</p>
+                        <p className="text-[9px] text-gray-400 uppercase font-medium">{p.mode}</p>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="sm:col-span-2">
-                <label className={label} htmlFor="ui-custom-css">
-                  Custom CSS (advanced)
-                </label>
-                <textarea
-                  id="ui-custom-css"
-                  className={`${input} min-h-[120px] font-mono text-xs`}
-                  value={uiTheme.custom_css}
-                  onChange={(e) => setUiTheme((t) => ({ ...t, custom_css: e.target.value }))}
-                  placeholder="/* Appended to the storefront as a style block */"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  {uiTheme.custom_css.length} / 32 000 characters
-                </p>
+
+              <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-card">
+                <div>
+                  <label className={label} htmlFor="ui-theme-mode">
+                    Colour mode
+                  </label>
+                  <select
+                    id="ui-theme-mode"
+                    className={input}
+                    value={uiTheme.theme_mode}
+                    onChange={(e) =>
+                      setUiTheme((t) => ({
+                        ...t,
+                        theme_mode: e.target.value as "light" | "dark" | "system",
+                      }))
+                    }
+                  >
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="system">System (follow device)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={label} htmlFor="ui-layout-preset">
+                    Layout
+                  </label>
+                  <select
+                    id="ui-layout-preset"
+                    className={input}
+                    value={uiTheme.layout_preset}
+                    onChange={(e) =>
+                      setUiTheme((t) => ({
+                        ...t,
+                        layout_preset: e.target.value as "default" | "compact" | "wide",
+                      }))
+                    }
+                  >
+                    <option value="default">Default</option>
+                    <option value="compact">Compact (narrower content)</option>
+                    <option value="wide">Wide (more horizontal space)</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className={label} htmlFor="ui-primary-color">
+                    Primary colour
+                  </label>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <input
+                      id="ui-primary-color"
+                      type="color"
+                      className="h-10 w-14 cursor-pointer rounded-lg border border-card bg-card p-1"
+                      value={
+                        /^#[0-9A-Fa-f]{6}$/.test(uiTheme.primary_color.trim())
+                          ? uiTheme.primary_color.trim()
+                          : "#16a34a"
+                      }
+                      onChange={(e) => setUiTheme((t) => ({ ...t, primary_color: e.target.value }))}
+                    />
+                    <input
+                      type="text"
+                      className={`${input} flex-1 min-w-[140px]`}
+                      value={uiTheme.primary_color}
+                      onChange={(e) => setUiTheme((t) => ({ ...t, primary_color: e.target.value }))}
+                      placeholder="#16a34a"
+                      spellCheck={false}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="sm:col-span-2">
-                <label className={label} htmlFor="ui-custom-js">
-                  Custom JavaScript (advanced)
-                </label>
-                <textarea
-                  id="ui-custom-js"
-                  className={`${input} min-h-[100px] font-mono text-xs`}
-                  value={uiTheme.custom_js}
-                  onChange={(e) => setUiTheme((t) => ({ ...t, custom_js: e.target.value }))}
-                  placeholder="// Runs once on the storefront after load"
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  {uiTheme.custom_js.length} / 32 000 characters — use with care; only trusted code.
-                </p>
+
+              <div className="space-y-6 pt-4 border-t border-card">
+                <div>
+                  <label className={label} htmlFor="ui-custom-css">
+                    Custom CSS (advanced)
+                  </label>
+                  <textarea
+                    id="ui-custom-css"
+                    className={`${input} min-h-[120px] font-mono text-xs`}
+                    value={uiTheme.custom_css}
+                    onChange={(e) => setUiTheme((t) => ({ ...t, custom_css: e.target.value }))}
+                    placeholder="/* Appended to the storefront as a style block */"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {uiTheme.custom_css.length} / 32 000 characters
+                  </p>
+                </div>
+                <div>
+                  <label className={label} htmlFor="ui-custom-js">
+                    Custom JavaScript (advanced)
+                  </label>
+                  <textarea
+                    id="ui-custom-js"
+                    className={`${input} min-h-[100px] font-mono text-xs`}
+                    value={uiTheme.custom_js}
+                    onChange={(e) => setUiTheme((t) => ({ ...t, custom_js: e.target.value }))}
+                    placeholder="// Runs once on the storefront after load"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    {uiTheme.custom_js.length} / 32 000 characters — use with care; only trusted code.
+                  </p>
+                </div>
               </div>
             </div>
             <button
               type="button"
               disabled={saving}
               onClick={() => save("ui_theme")}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+              className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 transition-colors mt-6"
             >
               {saving ? "Saving…" : "Save UI / theme"}
             </button>
-          </div>
+          </>
         )}
         {section === "analytics" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+          <div className="bg-card rounded-2xl border border-card shadow-sm p-6 space-y-6">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Analytics &amp; tracking</h2>
+              <h2 className="text-lg font-bold text-foreground">Analytics &amp; tracking</h2>
               <p className="text-sm text-gray-500 mt-1">
                 GA4 / Universal Analytics and Meta Pixel load on the storefront from saved IDs. Invalid IDs are ignored. Conversion toggles are
-                exposed on <code className="text-xs bg-gray-100 px-1 rounded">window.__BF_ANALYTICS__</code> for cart/checkout hooks.
+                exposed on <code className="text-xs bg-gray-100 dark:bg-gray-800 px-1 rounded">window.__BF_ANALYTICS__</code> for cart/checkout hooks.
               </p>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -1807,24 +1992,24 @@ export default function AdminSettingsPage() {
               type="button"
               disabled={saving}
               onClick={() => save("analytics")}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+              className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 transition-colors"
             >
               {saving ? "Saving…" : "Save analytics"}
             </button>
           </div>
         )}
         {section === "invoice" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-            <h2 className="text-lg font-bold text-gray-900">Invoice &amp; tax</h2>
+          <div className="bg-card rounded-2xl border border-card shadow-sm p-6 space-y-5">
+            <h2 className="text-lg font-bold text-foreground">Invoice &amp; tax</h2>
             <p className="text-sm text-gray-500">
               Defaults for future PDF invoices and tax display. Orders and products are not recalculated — checkout prices stay as
               they are until tax logic is connected.
             </p>
-            <div className="rounded-xl border border-amber-100 bg-amber-50/80 px-4 py-3 text-sm text-amber-950">
+            <div className="rounded-xl border border-amber-200/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
               GST/VAT handling on receipts and per-product tax columns will use these values when invoice generation ships.
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4 border-t border-gray-100 pt-5">
+            <div className="grid sm:grid-cols-2 gap-4 border-t border-card pt-5">
               <div>
                 <label className={label} htmlFor="tax-scheme">
                   Tax scheme
@@ -1886,8 +2071,8 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4 border-t border-gray-100 pt-5">
-              <h3 className="text-sm font-semibold text-gray-900 sm:col-span-2">Invoice numbering</h3>
+            <div className="grid sm:grid-cols-2 gap-4 border-t border-card pt-5">
+              <h3 className="text-sm font-semibold text-foreground sm:col-span-2">Invoice numbering</h3>
               <div>
                 <label className={label} htmlFor="inv-prefix">
                   Prefix (e.g. INV-)
@@ -2024,7 +2209,7 @@ export default function AdminSettingsPage() {
                 </button>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-xl border border-gray-100 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-xl border border-card flex items-center justify-center shrink-0">
                   <Receipt className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
@@ -2038,14 +2223,14 @@ export default function AdminSettingsPage() {
               type="button"
               disabled={saving}
               onClick={() => save("invoice_tax")}
-              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+              className="bg-primary hover:bg-primary-hover text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 transition-colors"
             >
               {saving ? "Saving…" : "Save invoice & tax"}
             </button>
           </div>
         )}
         {section === "coupons" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-5">
             <h2 className="text-lg font-bold text-gray-900">Coupon defaults</h2>
             <p className="text-sm text-gray-500">
               Live coupon codes (create, edit, activate) are managed in{" "}
@@ -2135,7 +2320,7 @@ export default function AdminSettingsPage() {
           </div>
         )}
         {section === "api" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-6">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-6">
             <h2 className="text-lg font-bold text-gray-900">API &amp; integrations</h2>
             <p className="text-sm text-gray-500">
               Preferences for upcoming REST access, outbound webhooks, and carrier APIs. Saving does not change catalog or orders
@@ -2143,7 +2328,7 @@ export default function AdminSettingsPage() {
             </p>
             <div className="rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3 text-sm text-gray-700">
               <strong className="text-gray-900">Secrets:</strong> API keys and tokens for Shiprocket, Delhivery, or a public REST
-              key should live in <code className="bg-white px-1 rounded border">.env</code> in production — not in this database.
+              key should live in <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded border border-card font-mono text-[10px] text-primary/80">.env</code> in production — not in this database.
               This screen stores toggles and non-secret webhook endpoint URLs only.
             </div>
 
@@ -2260,7 +2445,7 @@ export default function AdminSettingsPage() {
         )}
         {section === "backup" && (
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+            <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-4">
               <h2 className="text-lg font-bold text-gray-900">Database (SQLite)</h2>
               <p className="text-sm text-gray-500">
                 Export and restore apply to the SQLite file behind <code className="bg-gray-100 px-1 rounded">DATABASE_URL</code>{" "}
@@ -2287,7 +2472,7 @@ export default function AdminSettingsPage() {
                       setExportBusy(false);
                     }
                   }}
-                  className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md shadow-primary/20 uppercase tracking-widest disabled:opacity-60"
                 >
                   {exportBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   Download database (.db)
@@ -2296,7 +2481,7 @@ export default function AdminSettingsPage() {
               <div className="border border-amber-200 bg-amber-50/90 rounded-xl p-4 space-y-3">
                 <p className="text-sm font-medium text-amber-950">Restore from backup</p>
                 <p className="text-xs text-amber-900/90">
-                  Replaces the live database file. A <code className="bg-white/80 px-1 rounded">.pre-restore-*.bak</code> copy is
+                  Replaces the live database file. A <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[10px] text-primary/80">.pre-restore-*.bak</code> copy is
                   created first. Close other apps using the DB if restore fails on Windows.
                 </p>
                 <div>
@@ -2351,7 +2536,7 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+            <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-4">
               <h2 className="text-lg font-bold text-gray-900">Next.js build cache</h2>
               <p className="text-sm text-gray-500">
                 Deletes the <code className="bg-gray-100 px-1 rounded">.next</code> folder (compiled output). In production this is
@@ -2381,7 +2566,7 @@ export default function AdminSettingsPage() {
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+            <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-4">
               <h2 className="text-lg font-bold text-gray-900">Scheduled backups (local & cloud)</h2>
               <p className="text-sm text-gray-500">
                 Preferences for automation. A cron job or worker can read these later; enabling options here does not start backups by
@@ -2486,7 +2671,7 @@ export default function AdminSettingsPage() {
           </div>
         )}
         {section === "products" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">Product catalogue defaults</h2>
             <p className="text-sm text-gray-500">
               Preferences for upcoming import and bulk-upload tools. Saving here does not change existing products;
@@ -2600,7 +2785,7 @@ export default function AdminSettingsPage() {
           </div>
         )}
         {section === "maintenance" && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
+          <div className="bg-card rounded-3xl border border-card shadow-sm p-8 space-y-4">
             <h2 className="text-lg font-bold text-gray-900">Maintenance mode</h2>
             <p className="text-sm text-gray-500">
               When enabled, visitors see your message instead of the shop. The admin panel and{" "}
@@ -2610,9 +2795,9 @@ export default function AdminSettingsPage() {
               orders in the database are not modified.
             </p>
             <div className="rounded-xl border border-green-100 bg-green-50/90 px-4 py-3 text-sm text-green-900">
-              <strong className="font-semibold">API lock:</strong> <code className="bg-white/80 px-1 rounded">middleware.ts</code>{" "}
+              <strong className="font-semibold">API lock:</strong> <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[10px] text-primary/80">middleware.ts</code>{" "}
               returns HTTP 503 for storefront APIs when maintenance is on (non-admins).{" "}
-              <code className="bg-white/80 px-1 rounded">/api/admin</code> and <code className="bg-white/80 px-1 rounded">/api/upload</code>{" "}
+              <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[10px] text-primary/80">/api/admin</code> and <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-[10px] text-primary/80">/api/upload</code>{" "}
               are excluded so saving settings and the admin panel always work; those routes still require an admin session in code.
             </div>
             <label className="flex items-center gap-3 cursor-pointer">

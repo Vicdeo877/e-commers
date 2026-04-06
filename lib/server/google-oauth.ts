@@ -1,4 +1,5 @@
 import { appOrigin } from "@/lib/server/app-origin";
+import { prisma } from "@/lib/prisma";
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
@@ -13,12 +14,16 @@ export function googleRedirectUri(requestOrigin?: string): string {
   return `${base}/api/auth/google/callback`;
 }
 
-function googleClientId(): string | undefined {
-  return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+async function getGoogleCredentials() {
+  const sec = await prisma.settingsSecurity.findFirst();
+  return {
+    clientId: sec?.googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID,
+    clientSecret: sec?.googleClientSecret || process.env.GOOGLE_CLIENT_SECRET,
+  };
 }
 
-export function buildGoogleAuthUrl(state: string, requestOrigin?: string): string {
-  const clientId = googleClientId();
+export async function buildGoogleAuthUrl(state: string, requestOrigin?: string): string {
+  const { clientId } = await getGoogleCredentials();
   if (!clientId) throw new Error("Google OAuth client id is not configured");
   const params = new URLSearchParams({
     client_id: clientId,
@@ -36,8 +41,7 @@ export async function exchangeGoogleCode(
   code: string,
   requestOrigin?: string
 ): Promise<{ access_token: string }> {
-  const clientId = googleClientId();
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const { clientId, clientSecret } = await getGoogleCredentials();
   if (!clientId || !clientSecret) throw new Error("Google OAuth is not configured");
 
   const body = new URLSearchParams({

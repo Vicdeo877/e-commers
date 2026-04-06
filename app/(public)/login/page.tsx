@@ -125,15 +125,6 @@ function LoginForm() {
             Create Account
           </Link>
         </div>
-
-        <div className="mt-4 bg-gray-50 rounded-xl p-3 text-center text-xs text-gray-400">
-          <p className="font-medium text-gray-600 mb-1">Seeded store admin (after <span className="font-mono">npm run db:setup</span>)</p>
-          <p>
-            <span className="font-mono text-gray-600">admin@blissfruits.local</span>
-            {" / "}
-            <span className="font-mono text-gray-600">Admin123!</span>
-          </p>
-        </div>
       </div>
     </div>
   );

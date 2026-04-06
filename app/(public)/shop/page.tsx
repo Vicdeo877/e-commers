@@ -31,6 +31,8 @@ function ShopContent() {
     setLoading(true);
     const params: Record<string, string> = {};
     if (q) params.q = q;
+    if (sort) params.sort = sort;
+    
     // API uses category_id; find it from slug
     if (category && categories.length) {
       const found = categories.find((c) => c.slug === category);
@@ -50,7 +52,7 @@ function ShopContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Shop All Fruits</h1>
+      <h1 className="text-3xl font-bold text-foreground mb-6">Shop All Fruits</h1>
 
       {categories.length > 0 && (
         <div className="mb-6 -mx-1">
@@ -59,7 +61,7 @@ function ShopContent() {
             <Link
               href="/shop"
               className={`shrink-0 flex flex-col items-center w-[88px] rounded-2xl border p-2 transition-colors ${
-                !category ? "border-green-500 bg-green-50" : "border-gray-100 bg-white hover:border-green-200"
+                !category ? "border-primary bg-primary/10 shadow-sm" : "border-card bg-card hover:border-primary/30"
               }`}
             >
               <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 mb-1 ring-1 ring-black/5">
@@ -72,10 +74,10 @@ function ShopContent() {
                 key={c.id}
                 href={`/shop?category=${c.slug}`}
                 className={`shrink-0 flex flex-col items-center w-[88px] rounded-2xl border p-2 transition-colors ${
-                  category === c.slug ? "border-green-500 bg-green-50" : "border-gray-100 bg-white hover:border-green-200"
+                  category === c.slug ? "border-primary bg-primary/10 shadow-sm" : "border-card bg-card hover:border-primary/30"
                 }`}
               >
-                <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 mb-1 ring-1 ring-black/5">
+                <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 mb-1 ring-1 ring-black/5">
                   <AppImage
                     src={c.image ? imgUrl(c.image) : null}
                     alt={c.name}
@@ -86,7 +88,7 @@ function ShopContent() {
                     placeholderType="category"
                   />
                 </div>
-                <span className="text-[11px] font-medium text-gray-700 text-center leading-tight line-clamp-2">{c.name}</span>
+                <span className="text-[11px] font-medium text-foreground text-center leading-tight line-clamp-2">{c.name}</span>
               </Link>
             ))}
           </div>
@@ -94,16 +96,16 @@ function ShopContent() {
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-6 flex flex-wrap gap-4 items-center">
+      <div className="bg-card rounded-2xl border border-card shadow-sm p-4 mb-6 flex flex-wrap gap-4 items-center">
         {/* Search */}
-        <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 flex-1 min-w-[200px]">
+        <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 flex-1 min-w-[200px]">
           <Search className="w-4 h-4 text-gray-400" />
           <input
             type="text"
             value={q}
             onChange={(e) => setParam("q", e.target.value)}
             placeholder="Search fruits..."
-            className="bg-transparent text-sm outline-none flex-1"
+            className="bg-transparent text-sm outline-none flex-1 text-foreground placeholder:text-gray-500"
           />
         </div>
 
@@ -113,11 +115,11 @@ function ShopContent() {
           <select
             value={category}
             onChange={(e) => setParam("category", e.target.value)}
-            className="text-sm bg-gray-100 rounded-full px-3 py-2 outline-none"
+            className="text-sm bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-2 outline-none text-foreground"
           >
-            <option value="">All Categories</option>
+            <option value="" className="dark:bg-gray-900">All Categories</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.slug}>{c.name}</option>
+              <option key={c.id} value={c.slug} className="dark:bg-gray-900">{c.name}</option>
             ))}
           </select>
         </div>
@@ -126,12 +128,12 @@ function ShopContent() {
         <select
           value={sort}
           onChange={(e) => setParam("sort", e.target.value)}
-          className="text-sm bg-gray-100 rounded-full px-3 py-2 outline-none"
+          className="text-sm bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-2 outline-none text-foreground"
         >
-          <option value="">Default</option>
-          <option value="price_asc">Price: Low to High</option>
-          <option value="price_desc">Price: High to Low</option>
-          <option value="name_asc">Name A-Z</option>
+          <option value="" className="dark:bg-gray-900">Default</option>
+          <option value="price_asc" className="dark:bg-gray-900">Price: Low to High</option>
+          <option value="price_desc" className="dark:bg-gray-900">Price: High to Low</option>
+          <option value="name_asc" className="dark:bg-gray-900">Name A-Z</option>
         </select>
 
         {(q || category || sort) && (

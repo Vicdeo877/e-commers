@@ -36,7 +36,7 @@ export default function ContactPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(data.message || "Message sent successfully!");
+        toast.success(data?.data?.message || data.message || "Message sent successfully!");
         setForm({ name: "", email: "", subject: "", message: "" });
       } else {
         toast.error(data.message || "Failed to send message.");

@@ -1,5 +1,7 @@
 "use client";
 
+import { useSiteSettings } from "@/context/SiteSettingsContext";
+
 function googleSignInHref(nextPath: string) {
   return `/api/auth/google?next=${encodeURIComponent(nextPath)}`;
 }
@@ -30,18 +32,16 @@ function GoogleIcon() {
 const linkClass =
   "flex items-center justify-center gap-2 w-full border border-gray-200 rounded-xl py-3 text-sm font-semibold text-gray-800 bg-white hover:bg-gray-50 transition-colors";
 
-/** Set `NEXT_PUBLIC_GOOGLE_SIGNIN=0` to hide Google buttons everywhere. */
-function showGoogleSignIn(): boolean {
-  return process.env.NEXT_PUBLIC_GOOGLE_SIGNIN !== "0";
-}
-
 type Props = {
   nextPath?: string;
   className?: string;
 };
 
 export function GoogleSignInButton({ nextPath = "/", className }: Props) {
-  if (!showGoogleSignIn()) return null;
+  const { settings } = useSiteSettings();
+  const enabled = settings?.auth.google_sign_in_enabled ?? (process.env.NEXT_PUBLIC_GOOGLE_SIGNIN !== "0");
+
+  if (!enabled) return null;
 
   return (
     <a href={googleSignInHref(nextPath)} className={className || linkClass}>
@@ -60,7 +60,10 @@ export function GoogleSignInSection({
   className,
   dividerLabel = "or",
 }: SectionProps) {
-  if (!showGoogleSignIn()) return null;
+  const { settings } = useSiteSettings();
+  const enabled = settings?.auth.google_sign_in_enabled ?? (process.env.NEXT_PUBLIC_GOOGLE_SIGNIN !== "0");
+
+  if (!enabled) return null;
 
   return (
     <>

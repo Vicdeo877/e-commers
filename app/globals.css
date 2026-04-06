@@ -7,11 +7,15 @@
   --foreground: #111827;
   --color-primary: #16a34a;
   --color-primary-hover: #15803d;
+  --card-bg: #ffffff;
+  --card-border: #f3f4f6;
 }
 
 .dark {
   --background: #030712;
   --foreground: #f9fafb;
+  --card-bg: #111827;
+  --card-border: #1f2937;
 }
 
 body {
@@ -19,6 +23,10 @@ body {
   background: var(--background);
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
+
+/* Base card / section helper for dark mode support */
+.bg-card { background-color: var(--card-bg); }
+.border-card { border-color: var(--card-border); }
 
 /* Layout width preset (targets Tailwind max-w-7xl containers) */
 body[data-layout="compact"] .max-w-7xl {
@@ -28,86 +36,111 @@ body[data-layout="wide"] .max-w-7xl {
   max-width: 96rem;
 }
 
-/* Map storefront green utilities to admin-configured primary (see ThemeRoot) */
-html.theme-custom-primary .bg-green-600 {
+/* Map storefront green/emerald utilities to admin-configured primary (see ThemeRoot) */
+html.theme-custom-primary .bg-green-600,
+html.theme-custom-primary .bg-emerald-600 {
   background-color: var(--color-primary) !important;
 }
-html.theme-custom-primary .hover\:bg-green-700:hover {
+html.theme-custom-primary .hover\:bg-green-700:hover,
+html.theme-custom-primary .hover\:bg-emerald-700:hover {
   background-color: var(--color-primary-hover) !important;
 }
-html.theme-custom-primary .bg-green-500 {
+html.theme-custom-primary .bg-green-500,
+html.theme-custom-primary .bg-emerald-500 {
   background-color: var(--color-primary-hover) !important;
 }
 @supports (background-color: color-mix(in srgb, red, blue)) {
-  html.theme-custom-primary .bg-green-500 {
+  html.theme-custom-primary .bg-green-500,
+  html.theme-custom-primary .bg-emerald-500 {
     background-color: color-mix(in srgb, var(--color-primary) 92%, black) !important;
   }
 }
-html.theme-custom-primary .text-green-600 {
+html.theme-custom-primary .text-green-600,
+html.theme-custom-primary .text-emerald-600 {
   color: var(--color-primary) !important;
 }
-html.theme-custom-primary .text-green-700 {
+html.theme-custom-primary .text-green-700,
+html.theme-custom-primary .text-emerald-700 {
   color: var(--color-primary-hover) !important;
 }
-html.theme-custom-primary .text-green-800 {
+html.theme-custom-primary .text-green-800,
+html.theme-custom-primary .text-emerald-800 {
   color: color-mix(in srgb, var(--color-primary) 80%, black) !important;
 }
-html.theme-custom-primary .border-green-600 {
+html.theme-custom-primary .border-green-600,
+html.theme-custom-primary .border-emerald-600 {
   border-color: var(--color-primary) !important;
 }
-html.theme-custom-primary .border-green-200 {
+html.theme-custom-primary .border-green-200,
+html.theme-custom-primary .border-emerald-200 {
   border-color: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
 }
-html.theme-custom-primary .ring-green-500 {
+html.theme-custom-primary .ring-green-500,
+html.theme-custom-primary .ring-emerald-500 {
   --tw-ring-color: var(--color-primary) !important;
 }
-html.theme-custom-primary .focus\:ring-green-500:focus {
+html.theme-custom-primary .focus\:ring-green-500:focus,
+html.theme-custom-primary .focus\:ring-emerald-500:focus {
   --tw-ring-color: var(--color-primary) !important;
 }
-html.theme-custom-primary .focus\:ring-green-300:focus {
+html.theme-custom-primary .focus\:ring-green-300:focus,
+html.theme-custom-primary .focus\:ring-emerald-300:focus {
   --tw-ring-color: rgba(22, 163, 74, 0.45) !important;
 }
 @supports (color: color-mix(in srgb, red, blue)) {
-  html.theme-custom-primary .focus\:ring-green-300:focus {
+  html.theme-custom-primary .focus\:ring-green-300:focus,
+  html.theme-custom-primary .focus\:ring-emerald-300:focus {
     --tw-ring-color: color-mix(in srgb, var(--color-primary) 45%, transparent) !important;
   }
 }
-html.theme-custom-primary .bg-green-50 {
+html.theme-custom-primary .bg-green-50,
+html.theme-custom-primary .bg-emerald-50 {
   background-color: rgba(22, 163, 74, 0.12) !important;
 }
-html.theme-custom-primary .bg-green-100 {
+html.theme-custom-primary .bg-green-100,
+html.theme-custom-primary .bg-emerald-100 {
   background-color: rgba(22, 163, 74, 0.18) !important;
 }
 @supports (background-color: color-mix(in srgb, red, blue)) {
-  html.theme-custom-primary .bg-green-50 {
+  html.theme-custom-primary .bg-green-50,
+  html.theme-custom-primary .bg-emerald-50 {
     background-color: color-mix(in srgb, var(--color-primary) 8%, white) !important;
   }
-  html.theme-custom-primary .bg-green-100 {
+  html.theme-custom-primary .bg-green-100,
+  html.theme-custom-primary .bg-emerald-100 {
     background-color: color-mix(in srgb, var(--color-primary) 15%, white) !important;
   }
 }
-html.theme-custom-primary .from-green-50 {
-  --tw-gradient-from: color-mix(in srgb, var(--color-primary) 10%, white) var(--tw-gradient-from-position);
+html.theme-custom-primary .from-green-50,
+html.theme-custom-primary .from-emerald-50 {
+  --tw-gradient-from: color-mix(in srgb, var(--color-primary) 10%, white) var(--tw-gradient-from-position) !important;
 }
+html.theme-custom-primary .to-green-500,
 html.theme-custom-primary .to-emerald-500 {
-  --tw-gradient-to: color-mix(in srgb, var(--color-primary) 85%, #059669) var(--tw-gradient-to-position);
+  --tw-gradient-to: color-mix(in srgb, var(--color-primary) 85%, #059669) var(--tw-gradient-to-position) !important;
 }
-html.theme-custom-primary .text-green-400 {
+html.theme-custom-primary .text-green-400,
+html.theme-custom-primary .text-emerald-400 {
   color: color-mix(in srgb, var(--color-primary) 70%, #4ade80) !important;
 }
-html.theme-custom-primary .hover\:text-green-600:hover {
+html.theme-custom-primary .hover\:text-green-600:hover,
+html.theme-custom-primary .hover\:text-emerald-600:hover {
   color: var(--color-primary) !important;
 }
-html.theme-custom-primary .hover\:text-green-700:hover {
+html.theme-custom-primary .hover\:text-green-700:hover,
+html.theme-custom-primary .hover\:text-emerald-700:hover {
   color: var(--color-primary-hover) !important;
 }
-html.theme-custom-primary .shadow-green-600\/20 {
-  --tw-shadow-color: color-mix(in srgb, var(--color-primary) 35%, transparent);
+html.theme-custom-primary .shadow-green-600\/20,
+html.theme-custom-primary .shadow-emerald-600\/20 {
+  --tw-shadow-color: color-mix(in srgb, var(--color-primary) 35%, transparent) !important;
 }
-html.theme-custom-primary .fill-green-600 {
+html.theme-custom-primary .fill-green-600,
+html.theme-custom-primary .fill-emerald-600 {
   fill: var(--color-primary) !important;
 }
-html.theme-custom-primary .stroke-green-600 {
+html.theme-custom-primary .stroke-green-600,
+html.theme-custom-primary .stroke-emerald-600 {
   stroke: var(--color-primary) !important;
 }
 
@@ -140,6 +173,36 @@ html.theme-custom-primary .stroke-green-600 {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     line-clamp: 2;
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .glass {
+    background: rgba(17, 24, 39, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .glass-dark {
+    background: rgba(17, 24, 39, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .premium-shadow {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  }
+  .dark .premium-shadow {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+  }
+
+  .premium-gradient-emerald {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   }
 }
 

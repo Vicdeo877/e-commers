@@ -104,6 +104,20 @@ export async function validateCouponCode(
   }
   if (c.expiresAt && c.expiresAt < new Date()) throw new Error("Coupon expired");
   const discount = discountForCouponRow(c, subtotal);
+
+  // Check if user has already used this coupon
+  const alreadyUsed = await prisma.order.findFirst({
+    where: {
+      userId: ctx.userId ?? undefined,
+      guestEmail: ctx.kind === "guest" ? (ctx as any).guestEmail : undefined,
+      couponCode: c.code,
+      orderStatus: { notIn: ["cancelled", "returned"] },
+    },
+  });
+  if (alreadyUsed) {
+    throw new Error("You have already used this coupon");
+  }
+
   return { discount, code: c.code };
 }
 

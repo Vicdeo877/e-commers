@@ -4,9 +4,10 @@ import { getSessionUser } from "@/lib/server/auth";
 import { loadCartLines } from "@/lib/server/cart";
 import { prisma } from "@/lib/prisma";
 import { getShippingRates, getPaymentFlags, getCouponDefaults } from "@/lib/server/settings";
-import { verifyEmailAddress } from "@/lib/server/email-verification";
+import { verifyEmailAddress, verifyPhoneNumber } from "@/lib/server/email-verification";
 import { resolveCheckoutCoupon } from "@/lib/server/coupon-helpers";
 import { getCouponUserContext } from "@/lib/server/coupon-user-context";
+import { sendOrderNotification } from "@/lib/server/email";
 
 function orderNumber() {
   return `BF${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
@@ -45,8 +46,9 @@ export async function POST(req: Request) {
 
     if (!user && !guest_email) return jsonErr("Email is required for guest checkout", 400);
 
-    if (!user && guest_email) {
-      const verified = await verifyEmailAddress(guest_email);
+    const emailToVerify = user?.email || guest_email;
+    if (emailToVerify) {
+      const verified = await verifyEmailAddress(emailToVerify);
       if (!verified.ok) return jsonErr(verified.message, 400);
     }
 
@@ -73,6 +75,11 @@ export async function POST(req: Request) {
     if (!shipping_name || !shipping_phone || !shipping_address || !shipping_city || !shipping_pincode) {
       return jsonErr("Please fill all required shipping fields", 400);
     }
+
+    const phoneVerified = await verifyPhoneNumber(shipping_phone);
+    if (!phoneVerified.ok) return jsonErr(phoneVerified.message, 400);
+
+    const location_link = body.location_link != null ? String(body.location_link).trim() : null;
 
     for (const line of cart.lines) {
       if (line.quantity > line.product.stockQuantity) {
@@ -126,6 +133,7 @@ export async function POST(req: Request) {
           orderStatus: "pending",
           paymentStatus: payment_method === "cod" ? "pending" : "pending",
           paymentMethod: payment_method,
+          locationLink: location_link,
         },
       });
 
@@ -151,6 +159,9 @@ export async function POST(req: Request) {
     });
 
     if (payment_method === "cod") {
+      // Fire-and-forget email for COD
+      void sendOrderNotification(result.id);
+      
       return jsonOk({
         order_id: result.id,
         order_number: result.orderNumber,
@@ -158,10 +169,13 @@ export async function POST(req: Request) {
       });
     }
 
-    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    // Load Razorpay credentials from DB
+    const paySec = await prisma.settingsPayment.findFirst();
+    const keyId = paySec?.razorpayKeyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID;
+    const keySecret = paySec?.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET;
+
     if (!keyId || !keySecret) {
-      return jsonErr("Razorpay is not configured on the server (set RAZORPAY_KEY_SECRET)", 500);
+      return jsonErr("Razorpay is not configured on the server (set Key ID and Secret in settings)", 500);
     }
 
     const rzp = new Razorpay({ key_id: keyId, key_secret: keySecret });

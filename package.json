@@ -9,7 +9,7 @@
     "clean": "node -e \"const fs=require('fs');['.next','.next-dev'].forEach(d=>{try{fs.rmSync(d,{recursive:true,force:true})}catch(e){}})\"",
     "dev": "next dev",
     "dev:clean": "npm run clean && next dev",
-    "build": "next build",
+    "build": "npx prisma db push && next build",
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",

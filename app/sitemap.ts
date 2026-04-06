@@ -4,28 +4,35 @@ import { prisma } from '@/lib/prisma';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blissfruitz.com';
 
-  const products = await prisma.product.findMany({
-    select: { slug: true, createdAt: true },
-    where: { isActive: true },
-  });
+  let productUrls: any[] = [];
+  let categoryUrls: any[] = [];
 
-  const categories = await prisma.category.findMany({
-    select: { slug: true },
-  });
+  try {
+    const products = await prisma.product.findMany({
+      select: { slug: true, createdAt: true },
+      where: { isActive: true },
+    });
 
-  const productUrls = products.map((product) => ({
-    url: `${baseUrl}/product/${product.slug}`,
-    lastModified: product.createdAt,
-    changeFrequency: 'weekly' as const,
-    priority: 0.8,
-  }));
+    const categories = await prisma.category.findMany({
+      select: { slug: true },
+    });
 
-  const categoryUrls = categories.map((category) => ({
-    url: `${baseUrl}/shop?category=${category.slug}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.7,
-  }));
+    productUrls = products.map((product) => ({
+      url: `${baseUrl}/product/${product.slug}`,
+      lastModified: product.createdAt,
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    }));
+
+    categoryUrls = categories.map((category) => ({
+      url: `${baseUrl}/shop?category=${category.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }));
+  } catch (err) {
+    console.error('Sitemap DB Fetch Failed:', err);
+  }
 
   const staticUrls = [
     {
